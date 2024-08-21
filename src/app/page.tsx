@@ -12,12 +12,6 @@ import debounce from "debounce";
 import { fetchDelegators, fetchTopDelegates } from "./lib/client-api";
 import publicClient from "./lib/publicClient";
 
-type DelegatorsTableProps = {
-  data: Delegator[];
-  hideZeroBalances?: boolean;
-  setHideZeroBalances?: (hideZeroBalances: boolean) => void;
-};
-
 export default function Home() {
   const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
   const [delegatorsFilteredData, setDelegatorsFilteredData] = useState<
@@ -190,7 +184,11 @@ function DelegatorsTable({
   data,
   hideZeroBalances = true,
   setHideZeroBalances,
-}: DelegatorsTableProps) {
+}: {
+  data: Delegator[];
+  hideZeroBalances?: boolean;
+  setHideZeroBalances?: (hideZeroBalances: boolean) => void;
+}) {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
