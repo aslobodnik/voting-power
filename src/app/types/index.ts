@@ -13,3 +13,9 @@ type Delegator = {
   block_delegated: bigint;
   delegated_timestamp: bigint;
 };
+
+type Holder = {
+  address: string;
+  balance: bigint;
+  rank: number;
+};

@@ -4,23 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatToken, ShortenAddress } from "./lib/helpers";
-
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
 import { isAddress } from "viem";
 import { getEnsName, getEnsAddress, normalize } from "viem/ens";
 import { Address } from "viem";
 import Pagination from "./components/Pagination";
 import debounce from "debounce";
 import { fetchDelegators, fetchTopDelegates } from "./lib/client-api";
-
-const publicClient = createPublicClient({
-  chain: mainnet,
-  transport: http(process.env.RPC_ENDPOINT),
-  batch: {
-    multicall: true,
-  },
-});
+import publicClient from "./lib/publicClient";
 
 type DelegatorsTableProps = {
   data: Delegator[];

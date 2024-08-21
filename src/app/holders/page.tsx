@@ -2,23 +2,8 @@
 import { useEffect, useState } from "react";
 import Pagination from "../components/Pagination";
 import { formatToken, ShortenAddress } from "../lib/helpers";
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
 import { Address } from "viem";
-
-type Holder = {
-  address: string;
-  balance: bigint;
-  rank: number;
-};
-
-const publicClient = createPublicClient({
-  chain: mainnet,
-  transport: http(process.env.RPC_ENDPOINT),
-  batch: {
-    multicall: true,
-  },
-});
+import publicClient from "../lib/publicClient";
 
 export default function Holders() {
   return <HoldersTable />;
