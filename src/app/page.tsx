@@ -75,7 +75,7 @@ export default function Home() {
       if (!delegateAddress) return;
       setIsLoading(true);
       setError(null);
-      const url = `http://localhost:3000/api/get-delegators?delegate=${encodeURIComponent(
+      const url = `/api/get-delegators?delegate=${encodeURIComponent(
         delegateAddress
       )}`;
 
@@ -331,7 +331,7 @@ function DelegatesTable({
       setIsLoading(true);
       console.log("loading....");
       setError(null);
-      const url = "http://localhost:3000/api/get-top-delegates";
+      const url = "/api/get-top-delegates";
 
       try {
         const response = await fetch(url);

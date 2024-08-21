@@ -50,7 +50,7 @@ function HoldersTable({}: {}) {
       setIsLoading(true);
       console.log("loading....");
       setError(null);
-      const url = "http://localhost:3000/api/get-top-holders";
+      const url = "/api/get-top-holders";
 
       try {
         const response = await fetch(url);
