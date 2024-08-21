@@ -2,7 +2,7 @@
 import Image from "next/image";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatToken, ShortenAddress } from "./helpers";
 
 import { createPublicClient, http } from "viem";
@@ -56,6 +56,7 @@ export default function Home() {
   const [searchAddress, setSearchAddress] = useState("");
   const [votingPower, setVotingPower] = useState<bigint>(0n);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [delegations, setDelegations] = useState(0);
 
   const handleDelegateClick = (address: string) => {
     setDelegateAddress(address);
@@ -110,10 +111,9 @@ export default function Home() {
       ? delegatorsData.filter((d) => d.delegator_tokens >= 1000000000000000000n)
       : delegatorsData;
 
-    // You may also want to store `totalTokens` and `filteredData` in state or context if they need to be accessed elsewhere
-    setVotingPower(totalTokens); // Assuming you have a state setter for totalTokens
-    setDelegatorsFilteredData(filteredData); // Assuming you have a state setter for filtered data
-  }, [delegatorsData, hideZeroBalances]);
+    setVotingPower(totalTokens);
+    setDelegatorsFilteredData(filteredData);
+  }, [delegatorsData, hideZeroBalances, delegateAddress]);
 
   useEffect(() => {
     const handleSearch = async (input: string) => {
@@ -157,6 +157,11 @@ export default function Home() {
       debouncedHandleSearch.clear();
     };
   }, [searchInput]);
+
+  useEffect(() => {
+    setDelegations(delegatorsFilteredData.length);
+  }, [delegatorsFilteredData]);
+
   return (
     <div className="flex flex-col gap-14">
       {/* Top Delegates Table */}
@@ -198,7 +203,7 @@ export default function Home() {
       <DelegateCard
         delegateAddress={delegateAddress}
         votingPower={votingPower}
-        delegations={delegatorsFilteredData.length}
+        delegations={delegations}
       />
 
       {/* Delegators Table */}
