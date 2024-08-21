@@ -12,6 +12,7 @@ import { getEnsName, getEnsAddress, normalize } from "viem/ens";
 import { Address } from "viem";
 import Pagination from "./components/Pagination";
 import debounce from "debounce";
+import { fetchDelegators, fetchTopDelegates } from "./lib/client-api";
 
 const publicClient = createPublicClient({
   chain: mainnet,
@@ -21,25 +22,10 @@ const publicClient = createPublicClient({
   },
 });
 
-type Delegator = {
-  delegator: string;
-  delegator_tokens: bigint;
-  block_delegated: bigint;
-  delegated_timestamp: bigint;
-};
 type DelegatorsTableProps = {
   data: Delegator[];
   hideZeroBalances?: boolean;
   setHideZeroBalances?: (hideZeroBalances: boolean) => void;
-};
-
-type Delegate = {
-  delegate_address: string;
-  voting_power: bigint;
-  rank: number;
-  delegations: number;
-  block_timestamp: bigint;
-  non_zero_delegations: number;
 };
 
 export default function Home() {
@@ -73,30 +59,23 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDelegatorsData = async () => {
       if (!delegateAddress) return;
       setIsLoading(true);
       setError(null);
-      const url = `/api/get-delegators?delegate=${encodeURIComponent(
-        delegateAddress
-      )}`;
 
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const r = await response.json();
-        setDelegatorsData(r.data);
+        const data = await fetchDelegators(delegateAddress);
+        setDelegatorsData(data);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        setError(`There was a problem fetching the data: ${errorMessage}`);
+        setError(`There was a problem fetching delegators: ${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
+    fetchDelegatorsData();
   }, [delegateAddress]);
 
   useEffect(() => {
@@ -360,29 +339,22 @@ function DelegatesTable({
   }, [data]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchTopDelegatesData = async () => {
       setIsLoading(true);
-      console.log("loading....");
       setError(null);
-      const url = "/api/get-top-delegates";
 
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const r = await response.json();
-        setData(r.data);
+        const data = await fetchTopDelegates();
+        setData(data);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        setError(`There was a problem fetching the data: ${errorMessage}`);
+        setError(`There was a problem fetching top delegates: ${errorMessage}`);
       } finally {
         setIsLoading(false);
-        console.log("loading complete");
       }
     };
 
-    fetchData();
+    fetchTopDelegatesData();
   }, []);
 
   const handleClick = (address: string) => {
