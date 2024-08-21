@@ -2,15 +2,16 @@
 import Image from "next/image";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatToken, ShortenAddress } from "./helpers";
 
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 import { isAddress } from "viem";
-import { getEnsName, normalize } from "viem/ens";
+import { getEnsName, getEnsAddress, normalize } from "viem/ens";
 import { Address } from "viem";
 import Pagination from "./components/Pagination";
+import debounce from "debounce";
 
 const publicClient = createPublicClient({
   chain: mainnet,
@@ -115,18 +116,47 @@ export default function Home() {
   }, [delegatorsData, hideZeroBalances]);
 
   useEffect(() => {
-    const handleSearch = async () => {
-      if (isAddress(searchInput)) {
-        setSearchAddress(searchInput);
-        setDelegateAddress(searchInput);
-      } else if (/^[a-zA-Z0-9]+$/.test(searchInput)) {
+    const handleSearch = async (input: string) => {
+      if (isAddress(input)) {
+        setSearchAddress(input);
+        setDelegateAddress(input);
+      } else if (input.includes(".")) {
+        try {
+          const normalizedName = normalize(input);
+          const ensAddress = await publicClient.getEnsAddress({
+            name: normalizedName,
+          });
+          if (ensAddress) {
+            setSearchAddress(ensAddress);
+            setDelegateAddress(ensAddress);
+          } else {
+            setSearchAddress("");
+            setDelegateAddress("");
+          }
+        } catch (error) {
+          console.error("Error resolving ENS name:", error);
+          setSearchAddress("");
+          setDelegateAddress("");
+        }
+      } else if (/^[a-zA-Z0-9]+$/.test(input)) {
         setSearchAddress("");
+        setDelegateAddress("");
       }
     };
 
-    handleSearch();
-  }, [searchInput, searchAddress]);
+    const debouncedHandleSearch = debounce(handleSearch, 300);
 
+    if (searchInput) {
+      debouncedHandleSearch(searchInput);
+    } else {
+      setSearchAddress("");
+      setDelegateAddress("");
+    }
+
+    return () => {
+      debouncedHandleSearch.clear();
+    };
+  }, [searchInput]);
   return (
     <div className="flex flex-col gap-14">
       {/* Top Delegates Table */}
@@ -157,9 +187,7 @@ export default function Home() {
             className="bg-zinc-800 w-full  min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
             placeholder="slobo.eth or 0x5423..."
             value={searchInput}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setSearchInput(e.target.value)
-            }
+            onChange={(e) => setSearchInput(e.target.value)}
             ref={searchInputRef}
             spellCheck="false"
           />
