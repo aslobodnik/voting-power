@@ -5,7 +5,8 @@ const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
-  port: 5433,
+  port: process.env.DB_PORT as unknown as number,
+  password: process.env.DB_PASSWORD,
 });
 
 export async function GET(request: NextRequest) {
