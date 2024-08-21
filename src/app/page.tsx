@@ -3,7 +3,7 @@ import Image from "next/image";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { formatToken, ShortenAddress } from "./helpers";
+import { formatToken, ShortenAddress } from "./lib/helpers";
 
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";

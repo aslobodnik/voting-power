@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Pagination from "../components/Pagination";
-import { formatToken, ShortenAddress } from "../helpers";
+import { formatToken, ShortenAddress } from "../lib/helpers";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 import { Address } from "viem";
