@@ -454,10 +454,12 @@ function DelegateCard({
   delegateAddress,
   votingPower,
   delegations,
-}: {
+}: // rank,
+{
   delegateAddress: string;
   votingPower: bigint;
   delegations: number;
+  // rank?: number;
 }) {
   const [ensName, setEnsName] = useState("");
   const [telegram, setTelegram] = useState("");
@@ -521,7 +523,13 @@ function DelegateCard({
 
   return (
     <div className="bg-zinc-800 rounded p-6 flex  justify-between flex-wrap md:flex-nowrap gap-5">
-      <div className="flex gap-4 w-fit ">
+      <div className="flex relative gap-4 w-fit ">
+        {/* <div className=" -top-6 -left-3 absolute">
+          <Image src="/badge_bg.svg" alt="badge" width={32} height={32} />
+          <div className="absolute inset-0 flex items-center justify-center  text-zinc-200 font-bold">
+            {rank}
+          </div>
+        </div> */}
         <div className="min-w-fit ">
           {ensName && <Avatar ensName={ensName} />}
           {!ensName && (
@@ -700,18 +708,14 @@ function Avatar({ ensName }: { ensName: string }) {
 
   return (
     <div className="min-w-fit">
-      {!loadError ? (
-        <Image
-          src={imgSrc}
-          onError={() => setLoadError(true)}
-          alt="Avatar"
-          width={110}
-          height={110}
-          className="rounded-full"
-        />
-      ) : (
-        <div className="bg-slate-700 h-[110px] w-[110px] rounded-full"></div>
-      )}
+      <Image
+        src={loadError ? "default_avatar.svg" : imgSrc}
+        onError={() => setLoadError(true)}
+        alt="Avatar"
+        width={110}
+        height={110}
+        className="rounded-full"
+      />
     </div>
   );
 }
