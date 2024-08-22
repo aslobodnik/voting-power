@@ -282,7 +282,7 @@ function DelegatorsTable({
             >
               <DelegateAddressCell delegateAddress={row.delegator} />
               <td>{formatToken(row.delegator_tokens)}</td>
-              <td className="py-3">
+              <td className="py-3 pl-2 md:pl-0">
                 {(
                   Number(
                     (BigInt(row.delegator_tokens) * 10000n) / totalTokens
@@ -534,7 +534,7 @@ function DelegateCard({
               !ensName ? "text-zinc-300 text-xl" : ""
             }`}
           >
-            {ensName || "Name not set 😭"}
+            {ensName || (delegateAddress && "Name not set 😭")}
           </div>
           <div className="flex gap-2">
             <div className=" text-sm h-5 font-mono">
