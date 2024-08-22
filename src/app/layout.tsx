@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import NavBar from "./components/NavBar";
-import Head from "next/head";
 import Link from "next/link";
-import iconX from "./img/icon_x.svg";
 import Image from "next/image";
+
 const roboto = Roboto({
   weight: ["500", "300", "400", "700", "900", "100"],
   subsets: ["latin"],
@@ -13,7 +12,15 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: "Voting Power",
-  description: "ENS Voting Power",
+  description: "Check your ENS Voting Power and see who delegates to you!",
+  openGraph: {
+    images: [
+      {
+        url: "https://voting-power.onrender.com/opengraph.png",
+        alt: "Voting Power Image",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -23,28 +30,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <Head>
-        <title>Voting Power</title>
-        <meta
-          name="description"
-          content="Check your ENS Voting Power and participate in governance"
-        />
-        <meta property="og:title" content="Voting Power" />
-        <meta
-          property="og:description"
-          content="Check your ENS Voting Power and participate in governance"
-        />
-        <meta property="og:image" content="/opengraph.png" />
-        <meta property="og:type" content="website" />
-        <meta property="og:locale" content="en_US" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Voting Power" />
-        <meta
-          name="twitter:description"
-          content="Check your ENS Voting Power and participate in governance"
-        />
-        <meta name="twitter:image" content="/opengraph.png" />
-      </Head>
       <body className={roboto.className}>
         <main className="max-w-screen-xl gap-14 flex flex-col pt-10 pb-20 px-4 mx-auto ">
           <NavBar />
