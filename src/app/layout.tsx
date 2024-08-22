@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import NavBar from "./components/NavBar";
+import Head from "next/head";
 import Link from "next/link";
 import iconX from "./img/icon_x.svg";
 import Image from "next/image";
@@ -13,26 +14,6 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Voting Power",
   description: "ENS Voting Power",
-  openGraph: {
-    title: "Voting Power",
-    description: "Check your ENS Voting Power and see who delegates to you",
-    images: [
-      {
-        url: "/opengraph.png",
-        width: 1200,
-        height: 630,
-        alt: "Voting Power Open Graph Image",
-      },
-    ],
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Voting Power",
-    description: "Check your ENS Voting Power and see who delegates to you",
-    images: ["/opengraph.png"],
-  },
 };
 
 export default function RootLayout({
@@ -42,6 +23,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <Head>
+        <title>Voting Power</title>
+        <meta
+          name="description"
+          content="Check your ENS Voting Power and participate in governance"
+        />
+        <meta property="og:title" content="Voting Power" />
+        <meta
+          property="og:description"
+          content="Check your ENS Voting Power and participate in governance"
+        />
+        <meta property="og:image" content="/opengraph.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="en_US" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Voting Power" />
+        <meta
+          name="twitter:description"
+          content="Check your ENS Voting Power and participate in governance"
+        />
+        <meta name="twitter:image" content="/opengraph.png" />
+      </Head>
       <body className={roboto.className}>
         <main className="max-w-screen-xl gap-14 flex flex-col pt-10 pb-20 px-4 mx-auto ">
           <NavBar />

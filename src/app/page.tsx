@@ -529,7 +529,13 @@ function DelegateCard({
           )}
         </div>
         <div className="flex flex-col gap-4 w-full min-w-52">
-          <div className=" text-3xl h-9">{ensName}</div>
+          <div
+            className={`text-3xl h-9 ${
+              !ensName ? "text-zinc-300 text-xl" : ""
+            }`}
+          >
+            {ensName || "Name not set 😭"}
+          </div>
           <div className="flex gap-2">
             <div className=" text-sm h-5 font-mono">
               {delegateAddress && ShortenAddress(delegateAddress)}
