@@ -13,6 +13,26 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Voting Power",
   description: "ENS Voting Power",
+  openGraph: {
+    title: "Voting Power",
+    description: "Check your ENS Voting Power and see who delegates to you",
+    images: [
+      {
+        url: "/opengraph.png",
+        width: 1200,
+        height: 630,
+        alt: "Voting Power Open Graph Image",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Voting Power",
+    description: "Check your ENS Voting Power and see who delegates to you",
+    images: ["/opengraph.png"],
+  },
 };
 
 export default function RootLayout({
