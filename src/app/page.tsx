@@ -623,7 +623,7 @@ function DelegateCard({
                 width={20}
                 height={20}
               />
-              {formatToken(votingPower)}
+              {formatToken(votingPower, true)}
             </div>
           ) : (
             <div className="flex gap-2 justify-center items-center h-7">
