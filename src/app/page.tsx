@@ -63,23 +63,50 @@ export default function Home() {
   }, [delegateAddress]);
 
   useEffect(() => {
-    if (delegatorsData.length === 0) return;
+    const fetchDelegatorsData = async () => {
+      if (!delegateAddress) {
+        setDelegatorsData([]);
+        setDelegatorsFilteredData([]);
+        setVotingPower(0n);
+        setDelegations(0);
+        return;
+      }
 
-    const totalTokens = delegatorsData.reduce(
-      (sum, d) => sum + BigInt(d.delegator_tokens),
-      0n
-    );
+      setIsLoading(true);
+      setError(null);
 
-    const filteredData = hideZeroBalances
-      ? delegatorsData.filter((d) => d.delegator_tokens >= 1000000000000000000n)
-      : delegatorsData;
+      try {
+        const data = await fetchDelegators(delegateAddress);
+        setDelegatorsData(data);
 
-    setVotingPower(totalTokens);
-    setDelegatorsFilteredData(filteredData);
-  }, [delegatorsData, hideZeroBalances, delegateAddress]);
+        const totalTokens = data.reduce(
+          (sum, d) => sum + BigInt(d.delegator_tokens),
+          0n
+        );
+
+        const filteredData = hideZeroBalances
+          ? data.filter((d) => d.delegator_tokens >= 1000000000000000000n)
+          : data;
+
+        setVotingPower(totalTokens);
+        setDelegatorsFilteredData(filteredData);
+        setDelegations(filteredData.length);
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        setError(`There was a problem fetching delegators: ${errorMessage}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDelegatorsData();
+  }, [delegateAddress, hideZeroBalances]);
 
   useEffect(() => {
     const handleSearch = async (input: string) => {
+      setIsLoading(true);
+      setError(null);
+
       if (isAddress(input)) {
         setSearchAddress(input);
         setDelegateAddress(input);
@@ -100,11 +127,14 @@ export default function Home() {
           console.error("Error resolving ENS name:", error);
           setSearchAddress("");
           setDelegateAddress("");
+          setError("Failed to resolve ENS name");
         }
       } else if (/^[a-zA-Z0-9]+$/.test(input)) {
         setSearchAddress("");
         setDelegateAddress("");
       }
+
+      setIsLoading(false);
     };
 
     const debouncedHandleSearch = debounce(handleSearch, 300);
