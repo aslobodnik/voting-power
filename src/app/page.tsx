@@ -11,17 +11,21 @@ import Pagination from "./components/Pagination";
 import debounce from "debounce";
 import { fetchDelegators, fetchTopDelegates } from "./lib/client-api";
 import publicClient from "./lib/publicClient";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
   const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
   const [delegatorsFilteredData, setDelegatorsFilteredData] = useState<
     Delegator[]
   >([]);
+  const urlParams = useSearchParams();
   const [delegateAddress, setDelegateAddress] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(
+    urlParams.get("address") || ""
+  );
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
   const [searchAddress, setSearchAddress] = useState("");
   const [votingPower, setVotingPower] = useState<bigint>(0n);
