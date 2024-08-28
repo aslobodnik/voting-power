@@ -1,31 +1,27 @@
 "use client";
 import Image from "next/image";
-
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatToken, ShortenAddress } from "./lib/helpers";
 import { isAddress } from "viem";
-import { getEnsName, getEnsAddress, normalize } from "viem/ens";
+import { getEnsName, normalize } from "viem/ens";
 import { Address } from "viem";
 import Pagination from "./components/Pagination";
 import debounce from "debounce";
 import { fetchDelegators, fetchTopDelegates } from "./lib/client-api";
 import publicClient from "./lib/publicClient";
-import { useSearchParams } from "next/navigation";
 
 export default function Home() {
   const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
   const [delegatorsFilteredData, setDelegatorsFilteredData] = useState<
     Delegator[]
   >([]);
-  const urlParams = useSearchParams();
+
   const [delegateAddress, setDelegateAddress] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState(
-    urlParams.get("address") || ""
-  );
+  const [searchInput, setSearchInput] = useState("");
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
   const [searchAddress, setSearchAddress] = useState("");
   const [votingPower, setVotingPower] = useState<bigint>(0n);
@@ -185,6 +181,7 @@ export default function Home() {
               height={20}
             />
           </div>
+
           <input
             className="bg-zinc-800 w-full  min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
             placeholder="slobo.eth or 0x5423..."
