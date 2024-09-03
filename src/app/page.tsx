@@ -281,7 +281,11 @@ function DelegatorsTable({
               key={index}
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
-              <DelegateAddressCell delegateAddress={row.delegator} />
+              <DelegateAddressCell
+                delegateAddress={row.delegator}
+                withLink={true}
+              />
+
               <td>{formatToken(row.delegator_tokens)}</td>
               <td className="py-3 pl-2 md:pl-0">
                 {(
@@ -673,9 +677,11 @@ function DelegateCard({
 function DelegateAddressCell({
   delegateAddress,
   onClick,
+  withLink,
 }: {
   delegateAddress: string;
   onClick?: () => void;
+  withLink?: boolean;
 }) {
   const [ensName, setEnsName] = useState<string | null>(null);
 
@@ -693,10 +699,26 @@ function DelegateAddressCell({
 
     fetchEnsName();
   }, [delegateAddress]);
-
-  return (
-    <td onClick={onClick} className="text-left w-72 cursor-pointer">
+  const content = (
+    <span
+      onClick={onClick}
+      className={`cursor-pointer ${withLink ? "hover:underline" : ""}`}
+    >
       {ensName || ShortenAddress(delegateAddress)}
+    </span>
+  );
+  return (
+    <td className="text-left w-72">
+      {withLink ? (
+        <Link
+          target="_blank"
+          href={`https://etherscan.io/address/${delegateAddress}`}
+        >
+          {content}
+        </Link>
+      ) : (
+        content
+      )}
     </td>
   );
 }
