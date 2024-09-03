@@ -18,6 +18,8 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { formatDistanceToNow } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
   const [delegatorsFilteredData, setDelegatorsFilteredData] = useState<
