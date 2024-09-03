@@ -1,3 +1,4 @@
+"use client";
 export async function fetchDelegators(
   delegateAddress: string
 ): Promise<Delegator[]> {

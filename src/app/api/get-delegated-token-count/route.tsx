@@ -10,8 +10,6 @@ const pool = new Pool({
 
 export async function GET(request: NextRequest) {
   try {
-    const delegate = request.nextUrl.searchParams.get("delegate");
-
     const q =
       "select sum(voting_power) as delegated_tokens from current_delegate_power;";
     const result = await pool.query(q);

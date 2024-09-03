@@ -9,6 +9,8 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
 });
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const delegate = request.nextUrl.searchParams.get("delegate");
