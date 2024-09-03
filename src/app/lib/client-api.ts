@@ -16,3 +16,10 @@ export async function fetchTopDelegates(): Promise<Delegate[]> {
   const { data } = await response.json();
   return data;
 }
+
+export async function fetchUpdatedAt(): Promise<string> {
+  const response = await fetch("/api/get-updated-at");
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const { data } = await response.json();
+  return data[0].block_timestamp;
+}

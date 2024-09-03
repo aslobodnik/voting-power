@@ -8,7 +8,11 @@ import { getEnsName, normalize } from "viem/ens";
 import { Address } from "viem";
 import Pagination from "./components/Pagination";
 import debounce from "debounce";
-import { fetchDelegators, fetchTopDelegates } from "./lib/client-api";
+import {
+  fetchDelegators,
+  fetchTopDelegates,
+  fetchUpdatedAt,
+} from "./lib/client-api";
 import publicClient from "./lib/publicClient";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -345,6 +349,7 @@ function DelegatesTable({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [updatedAt, setUpdatedAt] = useState("");
 
   const rowsPerPage = 10;
   const totalPages = Math.ceil(data.length / rowsPerPage);
@@ -379,6 +384,24 @@ function DelegatesTable({
 
     fetchTopDelegatesData();
   }, []);
+  useEffect(() => {
+    const fetchUpdatedAtTimestamp = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await fetchUpdatedAt();
+        setUpdatedAt(data);
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        setError(`There was a problem fetching top delegates: ${errorMessage}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUpdatedAtTimestamp();
+  }, []);
 
   const handleClick = (address: string) => {
     if (onDelegateClick) {
@@ -392,6 +415,9 @@ function DelegatesTable({
         <h2 className="text-zinc-100 text-right text-2xl font-bold">
           Top 100 ENS Delegates
         </h2>
+        <div className="text-xs font-mono text-zinc-600">
+          {formatUpdatedAt(updatedAt)}
+        </div>
       </div>
       <div className="flex items-center mb-4">
         <div className="w-[7px] h-[7px] bg-zinc-700 "></div>
@@ -771,4 +797,13 @@ function SearchInput({
       spellCheck="false"
     />
   );
+}
+
+function formatUpdatedAt(updatedAt: string): string {
+  return new Date(Number(updatedAt) * 1000).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  });
 }
