@@ -10,6 +10,8 @@ import Pagination from "./components/Pagination";
 import debounce from "debounce";
 import { fetchDelegators, fetchTopDelegates } from "./lib/client-api";
 import publicClient from "./lib/publicClient";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 export default function Home() {
   const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
@@ -181,15 +183,13 @@ export default function Home() {
               height={20}
             />
           </div>
-
-          <input
-            className="bg-zinc-800 w-full  min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
-            placeholder="slobo.eth or 0x5423..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            ref={searchInputRef}
-            spellCheck="false"
-          />
+          <Suspense>
+            <SearchInput
+              searchInput={searchInput}
+              setSearchInput={setSearchInput}
+              searchInputRef={searchInputRef}
+            />
+          </Suspense>
         </div>
       </div>
       <hr className="border-t border-zinc-750 " />
@@ -718,5 +718,35 @@ function Avatar({ ensName }: { ensName: string }) {
         className="rounded-full"
       />
     </div>
+  );
+}
+
+function SearchInput({
+  searchInput,
+  setSearchInput,
+  searchInputRef,
+}: {
+  searchInput: string;
+  setSearchInput: (searchInput: string) => void;
+  searchInputRef: React.RefObject<HTMLInputElement>;
+}) {
+  const searchParams = useSearchParams();
+
+  const address = searchParams.get("address") || "";
+
+  useEffect(() => {
+    if (!searchInput && address) {
+      setSearchInput(address);
+    }
+  }, [address, searchInput, setSearchInput]);
+  return (
+    <input
+      className="bg-zinc-800 w-full  min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
+      placeholder="slobo.eth or 0x5423..."
+      value={searchInput}
+      onChange={(e) => setSearchInput(e.target.value)}
+      ref={searchInputRef}
+      spellCheck="false"
+    />
   );
 }
