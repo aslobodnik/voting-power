@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
+import { unstable_noStore } from "next/cache";
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -10,6 +11,7 @@ const pool = new Pool({
 });
 
 export async function GET(request: NextRequest) {
+  unstable_noStore();
   try {
     const q = `
           select * from top_1000_holders order by balance desc;
