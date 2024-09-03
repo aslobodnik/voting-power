@@ -16,6 +16,7 @@ import {
 import publicClient from "./lib/publicClient";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Home() {
   const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
@@ -416,7 +417,7 @@ function DelegatesTable({
           Top 100 ENS Delegates
         </h2>
         <div className="text-xs font-mono text-zinc-600">
-          {formatUpdatedAt(updatedAt)}
+          {getRelativeTime(updatedAt)}
         </div>
       </div>
       <div className="flex items-center mb-4">
@@ -806,4 +807,9 @@ function formatUpdatedAt(updatedAt: string): string {
     hour: "numeric",
     minute: "numeric",
   });
+}
+
+function getRelativeTime(updatedAt: string): string {
+  const date = new Date(Number(updatedAt) * 1000);
+  return formatDistanceToNow(date, { addSuffix: true });
 }
