@@ -18,7 +18,7 @@ export async function fetchTopDelegates(): Promise<Delegate[]> {
 }
 
 export async function fetchUpdatedAt(): Promise<string> {
-  const response = await fetch("/api/get-updated-at");
+  const response = await fetch("/api/get-updated-at", { cache: "no-store" });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const { data } = await response.json();
   return data[0].block_timestamp;
