@@ -558,8 +558,6 @@ function DelegateCard({
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         console.error(`There was a problem fetching rank: ${errorMessage}`);
-      } finally {
-        setLoading(false);
       }
     };
     fetchRank();
@@ -570,12 +568,18 @@ function DelegateCard({
     <div className="bg-zinc-800 rounded p-6 flex  justify-between flex-wrap md:flex-nowrap gap-5">
       <div className="flex relative gap-4 w-fit ">
         <RankBadge rank={Number(rank)} />
-        <div className="min-w-fit ">
-          {ensName && <Avatar ensName={ensName} />}
-          {!ensName && (
-            <div className="bg-slate-700 h-[110px] w-[110px] rounded-full"></div>
-          )}
-        </div>
+
+        {ensName && <Avatar ensName={ensName} loading={loading} />}
+        {!ensName && (
+          <Image
+            src={"default_avatar.svg"}
+            alt="Avatar"
+            width={110}
+            height={110}
+            className="rounded-full"
+          />
+        )}
+
         <div className="flex flex-col gap-4 w-full min-w-52">
           <div
             className={`text-3xl h-9 ${
@@ -758,7 +762,7 @@ function DelegateAddressCell({
   );
 }
 
-function Avatar({ ensName }: { ensName: string }) {
+function Avatar({ ensName, loading }: { ensName: string; loading?: boolean }) {
   const [imgSrc, setImgSrc] = useState(
     `https://metadata.ens.domains/mainnet/avatar/${ensName}`
   );
@@ -766,14 +770,25 @@ function Avatar({ ensName }: { ensName: string }) {
 
   return (
     <div className="min-w-fit">
-      <Image
-        src={loadError ? "default_avatar.svg" : imgSrc}
-        onError={() => setLoadError(true)}
-        alt="Avatar"
-        width={110}
-        height={110}
-        className="rounded-full"
-      />
+      {ensName &&
+        (loading ? (
+          <Image
+            src="/loading.svg"
+            alt="loading"
+            width={110}
+            height={110}
+            className="p-8"
+          />
+        ) : (
+          <Image
+            src={loadError ? "default_avatar.svg" : imgSrc}
+            onError={() => setLoadError(true)}
+            alt="Avatar"
+            width={110}
+            height={110}
+            className="rounded-full"
+          />
+        ))}
     </div>
   );
 }
