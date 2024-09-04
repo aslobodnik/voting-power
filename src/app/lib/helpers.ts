@@ -18,6 +18,7 @@ export function formatToken(value: bigint, full: boolean = false): string {
     // Between 1000 and 1 million: use 'k' suffix
     const thousands = numberValue / 1000;
     return `${new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 1,
       maximumFractionDigits: 1,
     }).format(thousands)}k`;
   } else {

@@ -12,13 +12,12 @@ import {
   fetchDelegators,
   fetchTopDelegates,
   fetchUpdatedAt,
+  fetchDelegateRank,
 } from "./lib/client-api";
 import publicClient from "./lib/publicClient";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { formatDistanceToNow } from "date-fns";
-
-export const dynamic = "force-dynamic";
 
 export default function Home() {
   const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
@@ -488,12 +487,10 @@ function DelegateCard({
   delegateAddress,
   votingPower,
   delegations,
-}: // rank,
-{
+}: {
   delegateAddress: string;
   votingPower: bigint;
   delegations: number;
-  // rank?: number;
 }) {
   const [ensName, setEnsName] = useState("");
   const [telegram, setTelegram] = useState("");
@@ -501,6 +498,7 @@ function DelegateCard({
   const [email, setEmail] = useState("");
   const [x, setX] = useState("");
   const [loading, setLoading] = useState(false); // State to track loading status
+  const [rank, setRank] = useState("");
 
   useEffect(() => {
     setX("");
@@ -508,6 +506,7 @@ function DelegateCard({
     setEmail("");
     setGithub("");
     setEnsName("");
+    setRank("");
 
     const fetchEnsData = async () => {
       setLoading(true); // Start loading
@@ -545,25 +544,32 @@ function DelegateCard({
         } catch (error) {
           console.error("Error fetching ENS data:", error);
         }
+
         setLoading(false); // End loading
       } else {
         setLoading(false); // Ensure loading is set to false if no delegateAddress
       }
       console.log("done loading....");
     };
-
+    const fetchRank = async () => {
+      try {
+        const data = await fetchDelegateRank(delegateAddress);
+        setRank(data);
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        console.error(`There was a problem fetching rank: ${errorMessage}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRank();
     fetchEnsData();
   }, [delegateAddress]);
 
   return (
     <div className="bg-zinc-800 rounded p-6 flex  justify-between flex-wrap md:flex-nowrap gap-5">
       <div className="flex relative gap-4 w-fit ">
-        {/* <div className=" -top-6 -left-3 absolute">
-          <Image src="/badge_bg.svg" alt="badge" width={32} height={32} />
-          <div className="absolute inset-0 flex items-center justify-center  text-zinc-200 font-bold">
-            {rank}
-          </div>
-        </div> */}
+        <RankBadge rank={Number(rank)} />
         <div className="min-w-fit ">
           {ensName && <Avatar ensName={ensName} />}
           {!ensName && (
@@ -814,4 +820,15 @@ function formatUpdatedAt(updatedAt: string): string {
 function getRelativeTime(updatedAt: string): string {
   const date = new Date(Number(updatedAt) * 1000);
   return formatDistanceToNow(date, { addSuffix: true });
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  return rank > 0 && rank <= 99 ? (
+    <div className="-top-6 -left-3 absolute">
+      <Image src="/badge_bg.svg" alt="badge" width={28} height={28} />
+      <div className="absolute inset-0 flex items-center justify-center text-sm text-zinc-200 font-bold">
+        {rank}
+      </div>
+    </div>
+  ) : null;
 }
