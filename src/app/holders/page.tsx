@@ -4,6 +4,7 @@ import Pagination from "../components/Pagination";
 import { formatToken, ShortenAddress } from "../lib/helpers";
 import { Address } from "viem";
 import publicClient from "../lib/publicClient";
+import Link from "next/link";
 
 export default function Holders() {
   return <HoldersTable />;
@@ -89,7 +90,10 @@ function HoldersTable({}: {}) {
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
               <td className="py-3 text-center">{row.rank}</td>
-              <DelegateAddressCell delegateAddress={row.address} />
+              <DelegateAddressCell
+                delegateAddress={row.address}
+                withLink={true}
+              />
               <td className="w-48">{formatToken(row.balance)}</td>
               <td className="py-3">
                 {calculatePrecisePercentage(row.balance)}%
@@ -125,9 +129,11 @@ function HoldersTable({}: {}) {
 function DelegateAddressCell({
   delegateAddress,
   onClick,
+  withLink,
 }: {
   delegateAddress: string;
   onClick?: () => void;
+  withLink?: boolean;
 }) {
   const [ensName, setEnsName] = useState<string | null>(null);
 
@@ -145,10 +151,26 @@ function DelegateAddressCell({
 
     fetchEnsName();
   }, [delegateAddress]);
-
-  return (
-    <td onClick={onClick} className="text-left w-72 cursor-pointer">
+  const content = (
+    <span
+      onClick={onClick}
+      className={`cursor-pointer ${withLink ? "hover:underline" : ""}`}
+    >
       {ensName || ShortenAddress(delegateAddress)}
+    </span>
+  );
+  return (
+    <td className="text-left w-72">
+      {withLink ? (
+        <Link
+          target="_blank"
+          href={`https://etherscan.io/address/${delegateAddress}`}
+        >
+          {content}
+        </Link>
+      ) : (
+        content
+      )}
     </td>
   );
 }
