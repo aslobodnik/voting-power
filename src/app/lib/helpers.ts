@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from "date-fns";
 import { formatUnits } from "viem";
 
 export function formatToken(value: bigint, full: boolean = false): string {
@@ -32,4 +33,9 @@ export function formatToken(value: bigint, full: boolean = false): string {
 }
 export function ShortenAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+export function getRelativeTime(updatedAt: string): string {
+  const date = new Date(Number(updatedAt) * 1000);
+  return formatDistanceToNow(date, { addSuffix: true });
 }

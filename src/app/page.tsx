@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { formatToken, ShortenAddress } from "./lib/helpers";
+import { formatToken, ShortenAddress, getRelativeTime } from "./lib/helpers";
 import { isAddress } from "viem";
 import { getEnsName, normalize } from "viem/ens";
 import { Address } from "viem";
@@ -17,7 +17,6 @@ import {
 import publicClient from "./lib/publicClient";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { formatDistanceToNow } from "date-fns";
 import AddressCell from "./components/AddressCell";
 
 export default function Home() {
@@ -26,7 +25,6 @@ export default function Home() {
   const [delegateAddress, setDelegateAddress] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
 
@@ -57,7 +55,6 @@ export default function Home() {
       }
 
       setIsLoading(true);
-      setError(null);
 
       try {
         const data = await fetchDelegators(delegateAddress);
@@ -76,7 +73,9 @@ export default function Home() {
         setDelegations(filteredData.length);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        setError(`There was a problem fetching delegators: ${errorMessage}`);
+        console.error(
+          `There was a problem fetching delegators: ${errorMessage}`
+        );
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +87,6 @@ export default function Home() {
   useEffect(() => {
     const handleSearch = async (input: string) => {
       setIsLoading(true);
-      setError(null);
 
       if (isAddress(input)) {
         setDelegateAddress(input);
@@ -107,7 +105,6 @@ export default function Home() {
           console.error("Error resolving ENS name:", error);
 
           setDelegateAddress("");
-          setError("Failed to resolve ENS name");
         }
       } else if (/^[a-zA-Z0-9]+$/.test(input)) {
         setDelegateAddress("");
@@ -299,7 +296,6 @@ function DelegatorsTable({
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
-        <span>Total: {data.length.toLocaleString()}</span>
       </div>
     </div>
   );
@@ -736,20 +732,6 @@ function SearchInput({
       spellCheck="false"
     />
   );
-}
-
-function formatUpdatedAt(updatedAt: string): string {
-  return new Date(Number(updatedAt) * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  });
-}
-
-function getRelativeTime(updatedAt: string): string {
-  const date = new Date(Number(updatedAt) * 1000);
-  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 function RankBadge({ rank }: { rank: number }) {
