@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Pagination from "../components/Pagination";
-import { formatToken, ShortenAddress } from "../lib/helpers";
-import { Address } from "viem";
-import publicClient from "../lib/publicClient";
-import Link from "next/link";
+import { formatToken } from "../lib/helpers";
+import AddressCell from "../components/AddressCell";
 
 export default function Holders() {
   return <HoldersTable />;
@@ -90,10 +88,7 @@ function HoldersTable({}: {}) {
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
               <td className="py-3 text-center">{row.rank}</td>
-              <DelegateAddressCell
-                delegateAddress={row.address}
-                withLink={true}
-              />
+              <AddressCell delegateAddress={row.address} withLink={true} />
               <td className="w-48">{formatToken(row.balance)}</td>
               <td className="py-3">
                 {calculatePrecisePercentage(row.balance)}%
@@ -123,54 +118,5 @@ function HoldersTable({}: {}) {
         />
       </div>
     </div>
-  );
-}
-
-function DelegateAddressCell({
-  delegateAddress,
-  onClick,
-  withLink,
-}: {
-  delegateAddress: string;
-  onClick?: () => void;
-  withLink?: boolean;
-}) {
-  const [ensName, setEnsName] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchEnsName() {
-      try {
-        const ens = await publicClient.getEnsName({
-          address: delegateAddress as Address,
-        });
-        setEnsName(ens);
-      } catch (error) {
-        console.error(`Error fetching ENS for ${delegateAddress}:`, error);
-      }
-    }
-
-    fetchEnsName();
-  }, [delegateAddress]);
-  const content = (
-    <span
-      onClick={onClick}
-      className={`cursor-pointer ${withLink ? "hover:underline" : ""}`}
-    >
-      {ensName || ShortenAddress(delegateAddress)}
-    </span>
-  );
-  return (
-    <td className="text-left w-72">
-      {withLink ? (
-        <Link
-          target="_blank"
-          href={`https://etherscan.io/address/${delegateAddress}`}
-        >
-          {content}
-        </Link>
-      ) : (
-        content
-      )}
-    </td>
   );
 }

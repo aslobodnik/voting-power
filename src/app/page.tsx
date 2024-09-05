@@ -18,6 +18,7 @@ import publicClient from "./lib/publicClient";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { formatDistanceToNow } from "date-fns";
+import AddressCell from "./components/AddressCell";
 
 export default function Home() {
   const [delegators, setDelegators] = useState<Delegator[]>([]);
@@ -33,11 +34,10 @@ export default function Home() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [delegations, setDelegations] = useState(0);
 
+  // Updates delegate address and ensures the search input is visible and focused
   const handleDelegateClick = (address: string) => {
     setDelegateAddress(address);
     setSearchInput(address);
-
-    // Scroll to and focus on the search input
     if (searchInputRef.current) {
       searchInputRef.current.scrollIntoView({
         behavior: "smooth",
@@ -149,7 +149,6 @@ export default function Home() {
             delegators.
           </div>
         </div>
-
         <div className="relative">
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <Image
@@ -175,9 +174,7 @@ export default function Home() {
         votingPower={votingPower}
         delegations={delegations}
       />
-
       {/* Delegators Table */}
-
       <DelegatorsTable
         data={delegators}
         hideZeroBalances={hideZeroBalances}
@@ -257,10 +254,7 @@ function DelegatorsTable({
               key={index}
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
-              <DelegateAddressCell
-                delegateAddress={row.delegator}
-                withLink={true}
-              />
+              <AddressCell delegateAddress={row.delegator} withLink={true} />
 
               <td>{formatToken(row.delegator_tokens)}</td>
               <td className="py-3 pl-2 md:pl-0">
@@ -413,7 +407,7 @@ function DelegatesTable({
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
               <td className="py-3 text-center">{row.rank}</td>
-              <DelegateAddressCell
+              <AddressCell
                 delegateAddress={row.delegate_address}
                 onClick={() => handleClick(row.delegate_address)}
               />
@@ -680,55 +674,6 @@ function DelegateCard({
         </div>
       </div>
     </div>
-  );
-}
-
-function DelegateAddressCell({
-  delegateAddress,
-  onClick,
-  withLink,
-}: {
-  delegateAddress: string;
-  onClick?: () => void;
-  withLink?: boolean;
-}) {
-  const [ensName, setEnsName] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchEnsName() {
-      try {
-        const ens = await publicClient.getEnsName({
-          address: delegateAddress as Address,
-        });
-        setEnsName(ens);
-      } catch (error) {
-        console.error(`Error fetching ENS for ${delegateAddress}:`, error);
-      }
-    }
-
-    fetchEnsName();
-  }, [delegateAddress]);
-  const content = (
-    <span
-      onClick={onClick}
-      className={`cursor-pointer ${withLink ? "hover:underline" : ""}`}
-    >
-      {ensName || ShortenAddress(delegateAddress)}
-    </span>
-  );
-  return (
-    <td className="text-left w-72">
-      {withLink ? (
-        <Link
-          target="_blank"
-          href={`https://etherscan.io/address/${delegateAddress}`}
-        >
-          {content}
-        </Link>
-      ) : (
-        content
-      )}
-    </td>
   );
 }
 
