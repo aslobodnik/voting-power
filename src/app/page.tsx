@@ -20,10 +20,7 @@ import { Suspense } from "react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function Home() {
-  const [delegatorsData, setDelegatorsData] = useState<Delegator[]>([]);
-  const [delegatorsFilteredData, setDelegatorsFilteredData] = useState<
-    Delegator[]
-  >([]);
+  const [delegators, setDelegators] = useState<Delegator[]>([]);
 
   const [delegateAddress, setDelegateAddress] = useState("");
 
@@ -52,29 +49,8 @@ export default function Home() {
 
   useEffect(() => {
     const fetchDelegatorsData = async () => {
-      if (!delegateAddress) return;
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await fetchDelegators(delegateAddress);
-        setDelegatorsData(data);
-      } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        setError(`There was a problem fetching delegators: ${errorMessage}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDelegatorsData();
-  }, [delegateAddress]);
-
-  useEffect(() => {
-    const fetchDelegatorsData = async () => {
       if (!delegateAddress) {
-        setDelegatorsData([]);
-        setDelegatorsFilteredData([]);
+        setDelegators([]);
         setVotingPower(0n);
         setDelegations(0);
         return;
@@ -85,7 +61,6 @@ export default function Home() {
 
       try {
         const data = await fetchDelegators(delegateAddress);
-        setDelegatorsData(data);
 
         const totalTokens = data.reduce(
           (sum, d) => sum + BigInt(d.delegator_tokens),
@@ -97,7 +72,7 @@ export default function Home() {
           : data;
 
         setVotingPower(totalTokens);
-        setDelegatorsFilteredData(filteredData);
+        setDelegators(filteredData);
         setDelegations(filteredData.length);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
@@ -160,8 +135,8 @@ export default function Home() {
   }, [searchInput]);
 
   useEffect(() => {
-    setDelegations(delegatorsFilteredData.length);
-  }, [delegatorsFilteredData]);
+    setDelegations(delegators.length);
+  }, [delegators]);
 
   return (
     <div className="flex flex-col gap-14">
@@ -209,7 +184,7 @@ export default function Home() {
       {/* Delegators Table */}
 
       <DelegatorsTable
-        data={delegatorsFilteredData}
+        data={delegators}
         hideZeroBalances={hideZeroBalances}
         setHideZeroBalances={setHideZeroBalances}
       />
