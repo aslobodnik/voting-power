@@ -28,7 +28,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
-  const [searchAddress, setSearchAddress] = useState("");
+
   const [votingPower, setVotingPower] = useState<bigint>(0n);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [delegations, setDelegations] = useState(0);
@@ -91,7 +91,6 @@ export default function Home() {
       setError(null);
 
       if (isAddress(input)) {
-        setSearchAddress(input);
         setDelegateAddress(input);
       } else if (input.includes(".")) {
         try {
@@ -100,20 +99,17 @@ export default function Home() {
             name: normalizedName,
           });
           if (ensAddress) {
-            setSearchAddress(ensAddress);
             setDelegateAddress(ensAddress);
           } else {
-            setSearchAddress("");
             setDelegateAddress("");
           }
         } catch (error) {
           console.error("Error resolving ENS name:", error);
-          setSearchAddress("");
+
           setDelegateAddress("");
           setError("Failed to resolve ENS name");
         }
       } else if (/^[a-zA-Z0-9]+$/.test(input)) {
-        setSearchAddress("");
         setDelegateAddress("");
       }
 
@@ -125,7 +121,6 @@ export default function Home() {
     if (searchInput) {
       debouncedHandleSearch(searchInput);
     } else {
-      setSearchAddress("");
       setDelegateAddress("");
     }
 
