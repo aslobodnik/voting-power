@@ -1,27 +1,27 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { formatToken, ShortenAddress, getRelativeTime } from "./lib/helpers";
-import { isAddress } from "viem";
-import { getEnsName, normalize } from "viem/ens";
-import { Address } from "viem";
-import Pagination from "./components/Pagination";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState, Suspense } from "react";
 import debounce from "debounce";
+import { isAddress, Address } from "viem";
+import { getEnsName, normalize } from "viem/ens";
+
 import {
   fetchDelegators,
   fetchTopDelegates,
   fetchUpdatedAt,
   fetchDelegateRank,
 } from "./lib/client-api";
+import { formatToken, ShortenAddress, getRelativeTime } from "./lib/helpers";
 import publicClient from "./lib/publicClient";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+
 import AddressCell from "./components/AddressCell";
+import Pagination from "./components/Pagination";
 
 export default function Home() {
   const [delegators, setDelegators] = useState<Delegator[]>([]);
-
   const [delegateAddress, setDelegateAddress] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
@@ -138,23 +138,9 @@ export default function Home() {
         onDelegateClick={handleDelegateClick}
       />
       {/* Search Delegates Section */}
-      <div className="flex flex-col md:flex-row gap-5 justify-between md:items-end">
+      <div className="flex flex-col  gap-5 justify-between ">
         <div className="flex flex-col gap-5">
           <h1 className="text-zinc-100 text-2xl">Search Delegates</h1>
-          <div className="text-zinc-100 font-mono">
-            Delegates create and vote on proposals; keep track of a delegate’s
-            delegators.
-          </div>
-        </div>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Image
-              src="icon_search.svg"
-              alt="Search Icon"
-              width={20}
-              height={20}
-            />
-          </div>
           <Suspense>
             <SearchInput
               searchInput={searchInput}
@@ -723,14 +709,19 @@ function SearchInput({
     }
   }, [address, searchInput, setSearchInput]);
   return (
-    <input
-      className="bg-zinc-800 w-full  min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
-      placeholder="slobo.eth or 0x5423..."
-      value={searchInput}
-      onChange={(e) => setSearchInput(e.target.value)}
-      ref={searchInputRef}
-      spellCheck="false"
-    />
+    <div className="relative ">
+      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+        <Image src="icon_search.svg" alt="Search Icon" width={20} height={20} />
+      </div>
+      <input
+        className="bg-zinc-800 w-full  max-w-lg  min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
+        placeholder="slobo.eth or 0x5423..."
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        ref={searchInputRef}
+        spellCheck="false"
+      />
+    </div>
   );
 }
 
