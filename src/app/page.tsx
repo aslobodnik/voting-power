@@ -21,16 +21,14 @@ import AddressCell from "./components/AddressCell";
 import Pagination from "./components/Pagination";
 
 export default function Home() {
-  const [delegators, setDelegators] = useState<Delegator[]>([]);
   const [delegateAddress, setDelegateAddress] = useState("");
-
-  const [isLoading, setIsLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
-
-  const [votingPower, setVotingPower] = useState<bigint>(0n);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [delegations, setDelegations] = useState(0);
+  const { delegators, votingPower, delegations, isLoading } = useDelegators(
+    delegateAddress,
+    hideZeroBalances
+  );
 
   // Updates delegate address and ensures the search input is visible and focused
   const handleDelegateClick = (address: string) => {
@@ -45,90 +43,7 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const fetchDelegatorsData = async () => {
-      if (!delegateAddress) {
-        setDelegators([]);
-        setVotingPower(0n);
-        setDelegations(0);
-        return;
-      }
-
-      setIsLoading(true);
-
-      try {
-        const data = await fetchDelegators(delegateAddress);
-
-        const totalTokens = data.reduce(
-          (sum, d) => sum + BigInt(d.delegator_tokens),
-          0n
-        );
-
-        const filteredData = hideZeroBalances
-          ? data.filter((d) => d.delegator_tokens >= 1000000000000000000n)
-          : data;
-
-        setVotingPower(totalTokens);
-        setDelegators(filteredData);
-        setDelegations(filteredData.length);
-      } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        console.error(
-          `There was a problem fetching delegators: ${errorMessage}`
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDelegatorsData();
-  }, [delegateAddress, hideZeroBalances]);
-
-  useEffect(() => {
-    const handleSearch = async (input: string) => {
-      setIsLoading(true);
-
-      if (isAddress(input)) {
-        setDelegateAddress(input);
-      } else if (input.includes(".")) {
-        try {
-          const normalizedName = normalize(input);
-          const ensAddress = await publicClient.getEnsAddress({
-            name: normalizedName,
-          });
-          if (ensAddress) {
-            setDelegateAddress(ensAddress);
-          } else {
-            setDelegateAddress("");
-          }
-        } catch (error) {
-          console.error("Error resolving ENS name:", error);
-
-          setDelegateAddress("");
-        }
-      } else if (/^[a-zA-Z0-9]+$/.test(input)) {
-        setDelegateAddress("");
-      }
-
-      setIsLoading(false);
-    };
-
-    const debouncedHandleSearch = debounce(handleSearch, 300);
-
-    if (searchInput) {
-      debouncedHandleSearch(searchInput);
-    } else {
-      setDelegateAddress("");
-    }
-
-    return () => {
-      debouncedHandleSearch.clear();
-    };
-  }, [searchInput]);
-
-  useEffect(() => {
-    setDelegations(delegators.length);
-  }, [delegators]);
+  useDelegateSearch(searchInput, setDelegateAddress);
 
   return (
     <div className="flex flex-col gap-14">
@@ -734,4 +649,88 @@ function RankBadge({ rank }: { rank: number }) {
       </div>
     </div>
   ) : null;
+}
+
+function useDelegators(delegateAddress: string, hideZeroBalances: boolean) {
+  const [delegators, setDelegators] = useState<Delegator[]>([]);
+  const [votingPower, setVotingPower] = useState<bigint>(0n);
+  const [delegations, setDelegations] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDelegatorsData = async () => {
+      if (!delegateAddress) {
+        setDelegators([]);
+        setVotingPower(0n);
+        setDelegations(0);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const data = await fetchDelegators(delegateAddress);
+        const totalTokens = data.reduce(
+          (sum, d) => sum + BigInt(d.delegator_tokens),
+          0n
+        );
+        const filteredData = hideZeroBalances
+          ? data.filter((d) => d.delegator_tokens >= 1000000000000000000n)
+          : data;
+
+        setVotingPower(totalTokens);
+        setDelegators(filteredData);
+        setDelegations(filteredData.length);
+      } catch (error) {
+        console.error("Error fetching delegators:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDelegatorsData();
+  }, [delegateAddress, hideZeroBalances]);
+
+  return { delegators, votingPower, delegations, isLoading };
+}
+
+function useDelegateSearch(
+  searchInput: string,
+  setDelegateAddress: (address: string) => void
+) {
+  useEffect(() => {
+    const handleSearch = async (input: string) => {
+      if (isAddress(input)) {
+        setDelegateAddress(input);
+      } else if (input.includes(".")) {
+        try {
+          const normalizedName = normalize(input);
+          const ensAddress = await publicClient.getEnsAddress({
+            name: normalizedName,
+          });
+          if (ensAddress) {
+            setDelegateAddress(ensAddress);
+          } else {
+            setDelegateAddress("");
+          }
+        } catch (error) {
+          console.error("Error resolving ENS name:", error);
+          setDelegateAddress("");
+        }
+      } else if (/^[a-zA-Z0-9]+$/.test(input)) {
+        setDelegateAddress("");
+      }
+    };
+
+    const debouncedHandleSearch = debounce(handleSearch, 300);
+
+    if (searchInput) {
+      debouncedHandleSearch(searchInput);
+    } else {
+      setDelegateAddress("");
+    }
+
+    return () => {
+      debouncedHandleSearch.clear();
+    };
+  }, [searchInput, setDelegateAddress]);
 }
