@@ -37,7 +37,7 @@ export default function RootLayout({
         </main>
         {/* Footer */}
 
-        <div className="flex mb-4 pl-4 text-zinc-400">
+        <div className="flex mb-4 pl-4 text-zinc-400 items-center">
           Made by&nbsp;
           <Link
             className=" text-ens-blue opacity-80 hover:opacity-100 duration-300 transition-opacity"
@@ -53,6 +53,9 @@ export default function RootLayout({
             className="flex flex-end hover:opacity-80 duration-300 transition-opacity"
           >
             <Image src="/icon_x.svg" alt="Search Icon" width={15} height={15} />
+          </Link>
+          <Link href="https://slobo.xyz" target="_blank">
+            <div className="ml-4 h-4 w-4 hover:bg-green-900"></div>
           </Link>
         </div>
       </body>
