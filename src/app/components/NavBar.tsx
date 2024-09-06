@@ -7,24 +7,18 @@ import { usePathname } from "next/navigation";
 
 function NavBar() {
   return (
-    <nav className="flex md:flex-row flex-col gap-8">
-      <div className="flex">
+    <nav className="flex items-center md:flex-row flex-col gap-8 max-w-screen-xl pt-10 px-4 mx-auto ">
+      <div className="flex items-center">
         <Link href="/" className="flex">
           <Image
             src="/wordmark_orange.svg"
             alt="wordmark"
-            className="ml-2"
+            className="mr-2"
             width={220}
             height={70}
           />
         </Link>
-        <Image
-          src="/ens_pill.svg"
-          alt="ENS Logo"
-          className="ml-2"
-          width={70}
-          height={40}
-        />
+        <Image src="/ens_pill.svg" alt="ENS Logo" width={70} height={40} />
       </div>
 
       <div className="flex-1 flex justify-end">
@@ -54,7 +48,7 @@ function NavItems() {
   }, [pathname, navItems]);
 
   return (
-    <div className="flex text-zinc-400 gap-8">
+    <div className="flex text-zinc-400 gap-4">
       {navItems.map((item) => (
         <Link
           key={item.name}
