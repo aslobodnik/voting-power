@@ -131,7 +131,7 @@ function DelegatePowerChart() {
           itemStyle={{ color: "#0080BC" }}
         />
         <Line
-          type="monotone"
+          type="stepAfter"
           dataKey="voting_power"
           stroke="#0080BC"
           dot={false}
