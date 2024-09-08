@@ -34,3 +34,26 @@ export async function fetchDelegateRank(
   const { data } = await response.json();
   return data[0].rank;
 }
+
+export async function fetchDelegatePowerHistory(
+  delegateAddress: string
+): Promise<DelegatePowerHistory[]> {
+  const response = await fetch(
+    `/api/get-delegate-power-history?delegate=${encodeURIComponent(
+      delegateAddress
+    )}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const { data } = await response.json();
+
+  return data.map((item: DelegatePowerHistory) => ({
+    ...item,
+    block_timestamp: item.block_timestamp,
+    block_number: item.block_number,
+    voting_power: item.voting_power,
+  }));
+}

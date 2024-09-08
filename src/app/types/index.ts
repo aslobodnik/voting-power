@@ -19,3 +19,10 @@ type Holder = {
   balance: bigint;
   rank: number;
 };
+
+type DelegatePowerHistory = {
+  block_timestamp: number;
+  block_number: number;
+  log_index: number;
+  voting_power: bigint;
+};
