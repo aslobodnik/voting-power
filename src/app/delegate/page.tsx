@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import {
   LineChart,
   Line,
@@ -60,12 +60,20 @@ async function fetchDelegatePowerHistory(
 }
 
 export default function DelegatePowerHistoryPage() {
+  return (
+    <div>
+      <h1>Delegate Power History</h1>
+      <Suspense>
+        <DelegatePowerChart />
+      </Suspense>
+    </div>
+  );
+}
+
+function DelegatePowerChart() {
   const [data, setData] = useState<DelegatePowerHistory[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const searchParams = useSearchParams();
-
   const address = searchParams.get("address") || "";
 
   useEffect(() => {
@@ -73,15 +81,15 @@ export default function DelegatePowerHistoryPage() {
       try {
         const historyData = await fetchDelegatePowerHistory(address);
         setData(historyData);
-        setLoading(false);
       } catch (err) {
         setError("Failed to fetch data");
-        setLoading(false);
       }
     };
 
     fetchData();
   }, [address]);
+
+  if (error) return <div>Error: {error}</div>;
 
   const formatXAxis = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString("en-US", {
@@ -94,54 +102,42 @@ export default function DelegatePowerHistoryPage() {
     return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-
-  // Calculate the maximum voting power and add 20%
-  const maxVotingPower = Math.max(
-    ...data.map((item) => Number(item.voting_power))
-  );
-  const yAxisMax = (maxVotingPower * 1.2) / 1e18; // Convert to Ether and increase by 20%
-
   return (
-    <div>
-      <h1>Delegate Power History</h1>
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={data}>
-          <XAxis
-            dataKey="block_timestamp"
-            tickFormatter={formatXAxis}
-            type="number"
-            ticks={generateTicks()}
-            domain={[getStartTimestamp(), getCurrentTimestamp()]}
-          />
-          <YAxis tickFormatter={formatToken} domain={[0, "auto"]} />
-          <Tooltip
-            labelFormatter={(value) => {
-              const date = new Date(value * 1000);
-              return `Date: ${date.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}`;
-            }}
-            formatter={(value: number) => [formatToken(value), "Voting Power"]}
-            contentStyle={{
-              backgroundColor: "#E7E5E4",
-              border: "1px solid #cccccc",
-            }}
-            labelStyle={{ color: "black" }}
-            itemStyle={{ color: "#0080BC" }}
-          />
-          <Line
-            type="monotone"
-            dataKey="voting_power"
-            stroke="#0080BC"
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <ResponsiveContainer width="100%" height={400}>
+      <LineChart data={data}>
+        <XAxis
+          dataKey="block_timestamp"
+          tickFormatter={formatXAxis}
+          type="number"
+          ticks={generateTicks()}
+          domain={[getStartTimestamp(), getCurrentTimestamp()]}
+        />
+        <YAxis tickFormatter={formatToken} domain={[0, "auto"]} />
+        <Tooltip
+          labelFormatter={(value) => {
+            const date = new Date(value * 1000);
+            return `Date: ${date.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}`;
+          }}
+          formatter={(value: number) => [formatToken(value), "Voting Power"]}
+          contentStyle={{
+            backgroundColor: "#E7E5E4",
+            border: "1px solid #cccccc",
+          }}
+          labelStyle={{ color: "black" }}
+          itemStyle={{ color: "#0080BC" }}
+        />
+        <Line
+          type="monotone"
+          dataKey="voting_power"
+          stroke="#0080BC"
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
