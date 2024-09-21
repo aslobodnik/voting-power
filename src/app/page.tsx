@@ -337,6 +337,7 @@ function DelegatesTable({
                   delegateAddress={row.delegate_address}
                   onClick={() => handleClick(row.delegate_address)}
                   onChainVotes={row.on_chain_votes}
+                  withVotes={true}
                 />
               </td>
               <td className="w-48">{formatToken(row.voting_power)}</td>
@@ -370,13 +371,13 @@ function DelegatesTable({
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
-        <div className="flex flex-col gap-2 ">
+        <div className="md:flex flex-col gap-2 hidden ">
           <div className="flex justify-between items-center gap-1">
-            <div className="text-xs">Voted {">"} 10</div>
+            <div className="text-xs">Voted {">"} 19</div>
             <div className="h-3 w-3 bg-ens-blue"></div>
           </div>
           <div className="flex justify-between items-center gap-1">
-            <div className="text-xs">Voted {">"} 1</div>
+            <div className="text-xs">Voted {">"} 0</div>
             <div className="h-3 w-3 bg-yellow-300"></div>
           </div>
           <div className="flex justify-between gap-2 items-center">

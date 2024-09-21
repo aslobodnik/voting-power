@@ -10,17 +10,19 @@ function AddressCell({
   delegateAddress,
   withLink,
   onChainVotes,
+  withVotes,
 }: {
   delegateAddress: string;
   onClick?: () => void;
   withLink?: boolean;
   onChainVotes?: number;
+  withVotes?: boolean;
 }) {
   const [ensName, setEnsName] = useState<string | null>(null);
   const bgColor =
     onChainVotes === undefined
       ? "bg-red-400"
-      : onChainVotes > 10
+      : onChainVotes > 19
       ? "bg-ens-blue"
       : onChainVotes >= 1
       ? "bg-yellow-300"
@@ -47,8 +49,8 @@ function AddressCell({
         withLink ? "hover:underline" : ""
       }`}
     >
+      {withVotes && <div className={`h-2 mt-[1px] w-2 mr-2 ${bgColor}`}></div>}
       {ensName || ShortenAddress(delegateAddress)}
-      <div className={`h-2 w-2 ml-2 ${bgColor}`}></div>
     </span>
   );
   return (
