@@ -19,6 +19,7 @@ import publicClient from "./lib/publicClient";
 // Hooks
 import useDelegateSearch from "./hooks/useDelegateSearch";
 import useDelegators from "./hooks/useDelegators";
+import useVoteData from "./hooks/useVoteData";
 
 // Components
 import AddressCell from "./components/AddressCell";
@@ -227,7 +228,12 @@ function DelegatesTable({
 
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentData = data.slice(startIndex, endIndex);
+
+  const {
+    voteData,
+    isLoading: isLoadingVotes,
+    error: voteError,
+  } = useVoteData(data);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -251,6 +257,7 @@ function DelegatesTable({
 
     fetchTopDelegatesData();
   }, []);
+
   useEffect(() => {
     const fetchUpdatedAtTimestamp = async () => {
       setIsLoading(true);
@@ -275,6 +282,23 @@ function DelegatesTable({
       onDelegateClick(address);
     }
   };
+
+  const enrichedDelegates = data.map((delegate) => {
+    const vote = voteData.find(
+      (v) => v.voter.toLowerCase() === delegate.delegate_address.toLowerCase()
+    );
+
+    if (vote) {
+      return {
+        ...delegate,
+        latest_vote_timestamp: vote.latestTimestamp,
+        on_chain_votes: vote.uniqueProposalCount,
+      };
+    }
+    return delegate;
+  });
+
+  const currentData = enrichedDelegates.slice(startIndex, endIndex);
 
   return (
     <div className="bg-zinc-800 p-4 rounded-lg">
@@ -308,10 +332,13 @@ function DelegatesTable({
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
               <td className="py-3 text-center">{row.rank}</td>
-              <AddressCell
-                delegateAddress={row.delegate_address}
-                onClick={() => handleClick(row.delegate_address)}
-              />
+              <td className="text-left w-72">
+                <AddressCell
+                  delegateAddress={row.delegate_address}
+                  onClick={() => handleClick(row.delegate_address)}
+                  onChainVotes={row.on_chain_votes}
+                />
+              </td>
               <td className="w-48">{formatToken(row.voting_power)}</td>
               <td className="hidden md:table-cell">
                 {" "}
@@ -343,6 +370,20 @@ function DelegatesTable({
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
+        <div className="flex flex-col gap-2 ">
+          <div className="flex justify-between items-center gap-1">
+            <div className="text-xs">Voted {">"} 10</div>
+            <div className="h-3 w-3 bg-ens-blue"></div>
+          </div>
+          <div className="flex justify-between items-center gap-1">
+            <div className="text-xs">Voted {">"} 1</div>
+            <div className="h-3 w-3 bg-yellow-300"></div>
+          </div>
+          <div className="flex justify-between gap-2 items-center">
+            <div className="text-xs">Never Voted</div>
+            <div className="h-3 w-3 bg-red-400"></div>
+          </div>
+        </div>
       </div>
     </div>
   );

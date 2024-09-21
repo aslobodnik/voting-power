@@ -9,12 +9,22 @@ function AddressCell({
   onClick,
   delegateAddress,
   withLink,
+  onChainVotes,
 }: {
   delegateAddress: string;
   onClick?: () => void;
   withLink?: boolean;
+  onChainVotes?: number;
 }) {
   const [ensName, setEnsName] = useState<string | null>(null);
+  const bgColor =
+    onChainVotes === undefined
+      ? "bg-red-400"
+      : onChainVotes > 10
+      ? "bg-ens-blue"
+      : onChainVotes >= 1
+      ? "bg-yellow-300"
+      : "bg-red-400";
 
   useEffect(() => {
     async function fetchEnsName() {
@@ -33,13 +43,16 @@ function AddressCell({
   const content = (
     <span
       onClick={onClick}
-      className={`cursor-pointer ${withLink ? "hover:underline" : ""}`}
+      className={`cursor-pointer items-center flex ${
+        withLink ? "hover:underline" : ""
+      }`}
     >
       {ensName || ShortenAddress(delegateAddress)}
+      <div className={`h-2 w-2 ml-2 ${bgColor}`}></div>
     </span>
   );
   return (
-    <td className="text-left w-72">
+    <>
       {withLink ? (
         <Link
           target="_blank"
@@ -50,7 +63,7 @@ function AddressCell({
       ) : (
         content
       )}
-    </td>
+    </>
   );
 }
 

@@ -5,6 +5,8 @@ type Delegate = {
   delegations: number;
   block_timestamp: bigint;
   non_zero_delegations: number;
+  latest_vote_timestamp?: bigint;
+  on_chain_votes?: number;
 };
 
 type Delegator = {
@@ -25,4 +27,20 @@ type DelegatePowerHistory = {
   block_number: number;
   log_index: number;
   voting_power: bigint;
+};
+
+type Vote = {
+  id: string;
+  proposalId: string;
+  support: boolean;
+  reason: string;
+  voter: string;
+  weight: bigint;
+  timestamp: number;
+};
+
+type VoteData = {
+  voter: string;
+  uniqueProposalCount: number;
+  latestTimestamp: string;
 };

@@ -88,7 +88,9 @@ function HoldersTable({}: {}) {
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
               <td className="py-3 text-center">{row.rank}</td>
-              <AddressCell delegateAddress={row.address} withLink={true} />
+              <td className="text-left w-72">
+                <AddressCell delegateAddress={row.address} withLink={true} />
+              </td>
               <td className="w-48">{formatToken(row.balance)}</td>
               <td className="py-3">
                 {calculatePrecisePercentage(row.balance)}%
