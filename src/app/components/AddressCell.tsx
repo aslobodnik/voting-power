@@ -45,11 +45,19 @@ function AddressCell({
   const content = (
     <span
       onClick={onClick}
-      className={`cursor-pointer items-center flex ${
+      className={`cursor-pointer group items-center flex ${
         withLink ? "hover:underline" : ""
       }`}
     >
-      {withVotes && <div className={`h-2 mt-[1px] w-2 mr-2 ${bgColor}`}></div>}
+      {withVotes && (
+        <div
+          className={`h-2 mt-[1px] text-[6px] text-zinc-950 text-center w-2 mr-2 ${bgColor}`}
+        >
+          <span className="invisible group-hover:visible transition-opacity duration-1000 opacity-0 group-hover:opacity-100">
+            {onChainVotes}
+          </span>
+        </div>
+      )}
       {ensName || ShortenAddress(delegateAddress)}
     </span>
   );
