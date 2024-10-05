@@ -86,8 +86,6 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    console.log(counts);
-
     return NextResponse.json({
       message: "Vote data retrieved successfully",
       data: counts,

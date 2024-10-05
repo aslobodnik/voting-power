@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, Suspense } from "react";
 
-import { Address } from "viem";
+import { Address, formatEther } from "viem";
 import { getEnsName } from "viem/ens";
 
 import {
@@ -24,6 +24,15 @@ import useVoteData from "./hooks/useVoteData";
 // Components
 import AddressCell from "./components/AddressCell";
 import Pagination from "./components/Pagination";
+
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function Home() {
   const [delegateAddress, setDelegateAddress] = useState("");
@@ -157,7 +166,9 @@ function DelegatorsTable({
               key={index}
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
-              <AddressCell delegateAddress={row.delegator} withLink={true} />
+              <td>
+                <AddressCell delegateAddress={row.delegator} withLink={true} />
+              </td>
 
               <td>{formatToken(row.delegator_tokens)}</td>
               <td className="py-3 pl-2 md:pl-0">
@@ -578,6 +589,15 @@ function DelegateCard({
           )}
         </div>
       </div>
+      {!loading && (
+        <div className="hidden ml-10 lg:flex lg:-mb-8 lg:flex-col lg:justify-end w-full -mr-4 mx-auto">
+          <Suspense>
+            <DelegatePowerChart address={delegateAddress} />
+          </Suspense>
+        </div>
+      )}
+
+      {/* VP & Delegations grid */}
       <div className="grid grid-cols-2  w-full md:w-fit  min-w-fit  ">
         <div className="p-4 gap-1 justify-center flex text-center md:min-w-48 text-zinc-100 text-xl font-mono  border-r border-b border-zinc-700">
           {votingPower != 0n ? (
@@ -695,4 +715,179 @@ function RankBadge({ rank }: { rank: number }) {
       </div>
     </div>
   ) : null;
+}
+
+function DelegatePowerChart({ address }: { address: string }) {
+  const [data, setData] = useState<DelegatePowerHistory[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const historyData = await fetchDelegatePowerHistory(address);
+        setData(historyData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching delegate power history:", err);
+        setError("Failed to fetch data");
+        setData([]);
+      }
+    };
+
+    if (address) {
+      fetchData();
+    } else {
+      setData([]);
+      setError(null);
+    }
+  }, [address]);
+
+  if (error) return <div>Error: {error}</div>;
+  if (data.length === 0) return <div></div>;
+
+  const formatXAxis = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const generateYTicks = () => {
+    const maxVotingPower = Math.max(
+      ...data.map((item) => Number(item.voting_power))
+    );
+    let tickInterval;
+    let numTicks = 3; // Adjust this number to change the number of ticks
+
+    if (maxVotingPower <= 1000) {
+      tickInterval = Math.ceil(maxVotingPower / numTicks / 100) * 100;
+    } else if (maxVotingPower <= 1000000) {
+      tickInterval = Math.ceil(maxVotingPower / numTicks / 1000) * 1000;
+    } else {
+      tickInterval = Math.ceil(maxVotingPower / numTicks / 1000000) * 1000000;
+    }
+
+    const ticks = [];
+    for (let i = 0; i <= numTicks; i++) {
+      ticks.push(i * tickInterval);
+    }
+
+    return ticks;
+  };
+
+  const formatToken = (value: number) => {
+    //return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    if (value < 1000) {
+      // Below 1000: no decimals
+      return new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: 0,
+      }).format(value);
+    } else if (value < 1000000) {
+      // Between 1000 and 1 million: use 'k' suffix
+      const thousands = value / 1000;
+      return `${new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: 0,
+      }).format(thousands)}k`;
+    } else {
+      // 1 million and above: use 'm' suffix with 1 decimal place
+      const millions = value / 1000000;
+      return `${new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(millions)}m`;
+    }
+  };
+
+  return (
+    <ResponsiveContainer width="100%" height={120}>
+      <LineChart data={data}>
+        <XAxis
+          dataKey="block_timestamp"
+          tickFormatter={formatXAxis}
+          type="number"
+          ticks={generateTicks()}
+          domain={[getStartTimestamp(), getCurrentTimestamp()]}
+        />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          tickFormatter={formatToken}
+          ticks={generateYTicks()}
+          domain={[0, "auto"]}
+        />
+        <Tooltip
+          labelFormatter={(value) => {
+            const date = new Date(value * 1000);
+            return `Date: ${date.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}`;
+          }}
+          formatter={(value: number) => [formatToken(value), "Voting Power"]}
+          contentStyle={{
+            backgroundColor: "#E7E5E4",
+            border: "1px solid #cccccc",
+          }}
+          labelStyle={{ color: "black" }}
+          itemStyle={{ color: "#0080BC" }}
+        />
+        <Line
+          type="stepAfter"
+          dataKey="voting_power"
+          stroke="#0080BC"
+          dot={false}
+          isAnimationActive={false}
+          yAxisId="right"
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Helper function to get the Unix timestamp for Nov 1, 2022
+const getStartTimestamp = () => {
+  return new Date("2021-11-01").getTime() / 1000;
+};
+
+// Helper function to get the current timestamp
+const getCurrentTimestamp = () => {
+  return Math.floor(Date.now() / 1000);
+};
+
+// Helper function to generate ticks for every 6 months
+const generateTicks = () => {
+  const startDate = new Date("2021-11-01");
+  const endDate = new Date();
+  const ticks = [];
+
+  while (startDate <= endDate) {
+    ticks.push(startDate.getTime() / 1000);
+    startDate.setMonth(startDate.getMonth() + 8);
+  }
+
+  return ticks;
+};
+
+async function fetchDelegatePowerHistory(
+  delegateAddress: string
+): Promise<DelegatePowerHistory[]> {
+  const response = await fetch(
+    `/api/get-delegate-power-history?delegate=${encodeURIComponent(
+      delegateAddress
+    )}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const { data } = await response.json();
+
+  return data.map((item: any) => ({
+    block_timestamp: item.block_timestamp,
+    block_number: item.block_number,
+    log_index: item.log_index,
+    voting_power: Number(formatEther(item.voting_power)),
+  }));
 }
