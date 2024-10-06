@@ -12,6 +12,7 @@ import {
   fetchTopDelegates,
   fetchUpdatedAt,
   fetchDelegateRank,
+  fetchDelegatePowerHistory,
 } from "./lib/client-api";
 import { formatToken, ShortenAddress, getRelativeTime } from "./lib/helpers";
 import publicClient from "./lib/publicClient";
@@ -33,6 +34,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import useDelegatePowerHistory from "./hooks/useDelegatePowerHistory";
 
 export default function Home() {
   const [delegateAddress, setDelegateAddress] = useState("");
@@ -592,7 +594,7 @@ function DelegateCard({
       {!loading && (
         <div className="hidden ml-10 lg:flex lg:-mb-8 lg:flex-col lg:justify-end w-full -mr-4 mx-auto">
           <Suspense>
-            <DelegatePowerChart address={delegateAddress} />
+            <DelegatePowerChart delegateAddress={delegateAddress} />
           </Suspense>
         </div>
       )}
@@ -717,30 +719,8 @@ function RankBadge({ rank }: { rank: number }) {
   ) : null;
 }
 
-function DelegatePowerChart({ address }: { address: string }) {
-  const [data, setData] = useState<DelegatePowerHistory[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const historyData = await fetchDelegatePowerHistory(address);
-        setData(historyData);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching delegate power history:", err);
-        setError("Failed to fetch data");
-        setData([]);
-      }
-    };
-
-    if (address) {
-      fetchData();
-    } else {
-      setData([]);
-      setError(null);
-    }
-  }, [address]);
+function DelegatePowerChart({ delegateAddress }: { delegateAddress: string }) {
+  const { data, error } = useDelegatePowerHistory(delegateAddress);
 
   if (error) return <div>Error: {error}</div>;
   if (data.length === 0) return <div></div>;
@@ -868,26 +848,3 @@ const generateTicks = () => {
 
   return ticks;
 };
-
-async function fetchDelegatePowerHistory(
-  delegateAddress: string
-): Promise<DelegatePowerHistory[]> {
-  const response = await fetch(
-    `/api/get-delegate-power-history?delegate=${encodeURIComponent(
-      delegateAddress
-    )}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const { data } = await response.json();
-
-  return data.map((item: any) => ({
-    block_timestamp: item.block_timestamp,
-    block_number: item.block_number,
-    log_index: item.log_index,
-    voting_power: Number(formatEther(item.voting_power)),
-  }));
-}

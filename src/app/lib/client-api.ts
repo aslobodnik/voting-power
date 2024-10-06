@@ -1,4 +1,7 @@
 "use client";
+
+import { formatEther } from "viem";
+
 export async function fetchDelegators(
   delegateAddress: string
 ): Promise<Delegator[]> {
@@ -68,10 +71,10 @@ export async function fetchDelegatePowerHistory(
 
   const { data } = await response.json();
 
-  return data.map((item: DelegatePowerHistory) => ({
-    ...item,
+  return data.map((item: any) => ({
     block_timestamp: item.block_timestamp,
     block_number: item.block_number,
-    voting_power: item.voting_power,
+    log_index: item.log_index,
+    voting_power: Number(formatEther(item.voting_power)),
   }));
 }
