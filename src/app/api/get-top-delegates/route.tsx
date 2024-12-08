@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
             ROW_NUMBER() OVER (ORDER BY SUM(delegator_balance) DESC) as rank,
             delegate as delegate_address,
             SUM(delegator_balance) AS voting_power,
+            MAX(voting_power_30d_ago) as voting_power_30d_ago,  
             COUNT(DISTINCT delegator) AS delegations,
             COUNT(DISTINCT CASE WHEN delegator_balance >= 1000000000000000000 THEN delegator END) AS non_zero_delegations
         FROM 
