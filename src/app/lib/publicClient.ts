@@ -4,7 +4,7 @@ import { mainnet } from "viem/chains";
 
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http(process.env.RPC_ENDPOINT),
+  transport: http(process.env.NEXT_PUBLIC_RPC_ENDPOINT),
   batch: {
     multicall: true,
   },
