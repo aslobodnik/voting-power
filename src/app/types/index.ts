@@ -7,6 +7,7 @@ type Delegate = {
   non_zero_delegations: number;
   latest_vote_timestamp?: bigint;
   on_chain_votes?: number;
+  voting_power_30d_ago: bigint;
 };
 
 type Delegator = {
