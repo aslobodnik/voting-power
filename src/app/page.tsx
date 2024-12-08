@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, Suspense } from "react";
 
-import { Address } from "viem";
+import { Address, formatUnits } from "viem";
 import { getEnsName } from "viem/ens";
 
 import {
@@ -323,6 +323,7 @@ function DelegatesTable({
             <th className="py-2 w-24 text-center">Rank</th>
             <th className="py-2 text-left">Delegate</th>
             <th className="py-2 text-right ">Voting Power</th>
+            <th className="py-2 text-right ">30 Day Δ</th>
             <th className="py-2 text-right hidden md:table-cell">
               Delegations
             </th>
@@ -344,6 +345,13 @@ function DelegatesTable({
                 />
               </td>
               <td className="w-48">{formatToken(row.voting_power)}</td>
+              <td>
+                {" "}
+                <VotingPowerChangeIndicator
+                  change={row.voting_power_30d_ago - row.voting_power}
+                />
+              </td>
+
               <td className="hidden md:table-cell">
                 {" "}
                 {new Intl.NumberFormat("en-US").format(
@@ -707,4 +715,86 @@ function RankBadge({ rank }: { rank: number }) {
       </div>
     </div>
   ) : null;
+}
+
+function formatChange(value: number): string {
+  if (value < 1000) {
+    return new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: 0,
+    }).format(value);
+  } else if (value < 1000000) {
+    const thousands = value / 1000;
+    return `${new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(thousands)}k`;
+  } else {
+    const millions = value / 1000000;
+    return `${new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(millions)}m`;
+  }
+}
+
+function VotingPowerChangeIndicator({ change }: { change: bigint }) {
+  const actualValue = BigInt(change);
+  const numberValue = Number(formatUnits(actualValue, 18));
+  const absValue = Math.abs(numberValue);
+  const threshold = 10_000;
+
+  console.log(absValue, threshold);
+  return (
+    <span className="relative group hover:cursor-pointer inline-flex items-center">
+      {absValue > threshold ? (
+        numberValue < 0 ? (
+          <span className="text-green-500">
+            {" "}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 3a1 1 0 01.707.293l5 5a1 1 0 11-1.414 1.414L11 6.414V16a1 1 0 11-2 0V6.414L5.707 9.707a1 1 0 01-1.414-1.414l5-5A1 1 0 0110 3z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        ) : (
+          <span className="text-red-500">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 17a1 1 0 01-.707-.293l-5-5a1 1 0 111.414-1.414L9 13.586V4a1 1 0 112 0v9.586l3.293-3.293a1 1 0 111.414 1.414l-5 5A1 1 0 0110 17z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        )
+      ) : (
+        <span className="text-gray-500">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M4 10h12a1 1 0 010 2H4a1 1 0 110-2z" />
+          </svg>
+        </span>
+      )}
+      {/* Tooltip */}
+      <span className="absolute  left-full ml-2 transform  bg-black text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {formatChange(Math.abs(numberValue))}
+      </span>
+    </span>
+  );
 }
