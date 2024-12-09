@@ -323,7 +323,9 @@ function DelegatesTable({
             <th className="py-2 w-24 text-center">Rank</th>
             <th className="py-2 text-left">Delegate</th>
             <th className="py-2 text-right ">Voting Power</th>
-            <th className="py-2 text-right ">30 Day Δ</th>
+            <th className="py-2 text-right md:whitespace-nowrap">
+              <span className="hidden md:inline">30 Day </span>Δ
+            </th>
             <th className="py-2 text-right hidden md:table-cell">
               Delegations
             </th>
@@ -755,7 +757,7 @@ function VotingPowerChangeIndicator({ change }: { change: bigint }) {
     <span className="relative group hover:cursor-pointer inline-flex items-center">
       {absValue > threshold ? (
         numberValue < 0 ? (
-          <span className="text-green-500">
+          <span className="text-green-500 pt-1">
             {" "}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -771,7 +773,7 @@ function VotingPowerChangeIndicator({ change }: { change: bigint }) {
             </svg>
           </span>
         ) : (
-          <span className="text-red-500">
+          <span className="text-red-500 pt-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
