@@ -743,7 +743,6 @@ function VotingPowerChangeIndicator({ change }: { change: bigint }) {
   const absValue = Math.abs(numberValue);
   const threshold = 10_000;
 
-  console.log(absValue, threshold);
   return (
     <span className="relative group hover:cursor-pointer inline-flex items-center">
       {absValue > threshold ? (

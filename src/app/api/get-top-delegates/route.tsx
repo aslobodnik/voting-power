@@ -14,16 +14,14 @@ export async function GET(request: NextRequest) {
   try {
     const q = `
           SELECT 
-            ROW_NUMBER() OVER (ORDER BY SUM(delegator_balance) DESC) as rank,
-            delegate as delegate_address,
-            SUM(delegator_balance) AS voting_power,
-            MAX(voting_power_30d_ago) as voting_power_30d_ago,  
-            COUNT(DISTINCT delegator) AS delegations,
-            COUNT(DISTINCT CASE WHEN delegator_balance >= 1000000000000000000 THEN delegator END) AS non_zero_delegations
+            rank,
+            delegate_address,
+            voting_power,
+            voting_power_30d_ago,  
+            delegations,
+            non_zero_delegations
         FROM 
-            current_delegations
-        GROUP BY 
-            delegate
+            top_100_delegates
         ORDER BY
             voting_power DESC
         LIMIT 100;
