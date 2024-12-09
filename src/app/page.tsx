@@ -717,26 +717,34 @@ function RankBadge({ rank }: { rank: number }) {
   ) : null;
 }
 
-function formatChange(value: number): string {
-  if (value < 1000) {
-    return new Intl.NumberFormat("en-US", {
+function formatChange(value: number, showSign: boolean = false): string {
+  const isNegative = value < 0;
+  const absoluteValue = Math.abs(value);
+  let formattedValue: string;
+
+  if (absoluteValue < 1000) {
+    formattedValue = new Intl.NumberFormat("en-US", {
       maximumFractionDigits: 0,
-    }).format(value);
-  } else if (value < 1000000) {
-    const thousands = value / 1000;
-    return `${new Intl.NumberFormat("en-US", {
+    }).format(absoluteValue);
+  } else if (absoluteValue < 1000000) {
+    const thousands = absoluteValue / 1000;
+    formattedValue = `${new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
     }).format(thousands)}k`;
   } else {
-    const millions = value / 1000000;
-    return `${new Intl.NumberFormat("en-US", {
+    const millions = absoluteValue / 1000000;
+    formattedValue = `${new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
     }).format(millions)}m`;
   }
-}
 
+  if (showSign) {
+    return `${isNegative ? "+" : "-"}${formattedValue}`;
+  }
+  return formattedValue;
+}
 function VotingPowerChangeIndicator({ change }: { change: bigint }) {
   const actualValue = BigInt(change);
   const numberValue = Number(formatUnits(actualValue, 18));
@@ -751,7 +759,7 @@ function VotingPowerChangeIndicator({ change }: { change: bigint }) {
             {" "}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
+              className="h-5 w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -766,7 +774,7 @@ function VotingPowerChangeIndicator({ change }: { change: bigint }) {
           <span className="text-red-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
+              className="h-5 w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -791,8 +799,10 @@ function VotingPowerChangeIndicator({ change }: { change: bigint }) {
         </span>
       )}
       {/* Tooltip */}
-      <span className="absolute  left-full ml-2 transform  bg-black text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {formatChange(Math.abs(numberValue))}
+      <span className="absolute  left-full ml-2 transform  bg-black text-white text-sm rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {absValue > threshold
+          ? formatChange(numberValue)
+          : formatChange(numberValue, true)}
       </span>
     </span>
   );
