@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Pagination from "../components/Pagination";
 import { formatToken } from "../lib/helpers";
 import AddressCell from "../components/AddressCell";
+import ChangeIndicator from "../components/ChangeIndicator";
 
 export default function Holders() {
   return <HoldersTable />;
@@ -78,7 +79,10 @@ function HoldersTable({}: {}) {
             <th className="py-2 w-24 text-center">Rank</th>
             <th className="py-2 text-left">Holder</th>
             <th className="py-2 text-right ">Balance</th>
-            <th className="py-2 text-right ">%</th>
+
+            <th className="py-2 text-right md:whitespace-nowrap">
+              <span className="hidden md:inline">30 Day </span>Δ
+            </th>
           </tr>
         </thead>
         <tbody className="font-mono">
@@ -92,8 +96,15 @@ function HoldersTable({}: {}) {
                 <AddressCell delegateAddress={row.address} withLink={true} />
               </td>
               <td className="w-48">{formatToken(row.balance)}</td>
-              <td className="py-3">
-                {calculatePrecisePercentage(row.balance)}%
+
+              <td className="w-28">
+                {" "}
+                <ChangeIndicator
+                  change={row.balance_30d_ago - row.balance}
+                  threshold={10_000}
+                  isNew={row.balance_30d_ago == 0n}
+                  location="left"
+                />
               </td>
             </tr>
           ))}
