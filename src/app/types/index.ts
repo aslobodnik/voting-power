@@ -21,6 +21,7 @@ type Holder = {
   address: string;
   balance: bigint;
   rank: number;
+  balance_30d_ago: bigint;
 };
 
 type DelegatePowerHistory = {
