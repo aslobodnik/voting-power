@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, Suspense } from "react";
 
 import { Address, formatUnits } from "viem";
 import { getEnsName } from "viem/ens";
-
+import Papa from "papaparse";
 import ChangeIndicator from "./components/ChangeIndicator";
 
 import {
@@ -305,14 +305,55 @@ function DelegatesTable({
 
   const currentData = enrichedDelegates.slice(startIndex, endIndex);
 
+  const handleExportCSV = () => {
+    // Prepare the data for CSV export
+    const csvData = enrichedDelegates.map((row) => ({
+      Rank: row.rank,
+      Delegate: row.delegate_address,
+      "Voting Power": Math.round(Number(row.voting_power) / 1e18), // Round to whole number
+      "30 Day Change": Math.round(
+        Number(row.voting_power - row.voting_power_30d_ago) / 1e18
+      ),
+      Delegations: row.non_zero_delegations,
+      "On-chain Votes": row.on_chain_votes || 0,
+    }));
+
+    // Generate CSV content using unparse
+    const csv = Papa.unparse(csvData);
+
+    // Create and trigger download
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    // Set filename with current date
+    const date = new Date().toISOString().split("T")[0];
+    link.setAttribute("href", url);
+    link.setAttribute("download", `ens-delegates-${date}.csv`);
+
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-zinc-800 p-4 rounded-lg">
       <div className="flex justify-between items-center mb-4 mt-4">
         <h2 className="text-zinc-100 text-right text-2xl font-bold">
           Top 100 ENS Delegates
         </h2>
-        <div className="text-xs font-mono text-zinc-600">
-          {getRelativeTime(updatedAt)}
+        <div className="flex items-center gap-4">
+          <div className="text-xs font-mono text-zinc-600">
+            {getRelativeTime(updatedAt)}
+          </div>
+          <button
+            onClick={handleExportCSV}
+            className="px-3 py-1 hidden md:inline bg-zinc-700 hover:bg-zinc-600 rounded text-zinc-100 text-sm"
+          >
+            Export CSV
+          </button>
         </div>
       </div>
       <div className="flex items-center mb-4">
