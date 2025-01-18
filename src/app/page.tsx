@@ -350,7 +350,7 @@ function DelegatesTable({
           </div>
           <button
             onClick={handleExportCSV}
-            className="px-3 py-1 hidden md:inline bg-zinc-700 hover:bg-zinc-600 rounded text-zinc-100 text-sm"
+            className="px-3 py-1 hidden md:inline bg-zinc-700 hover:bg-zinc-600 transition-colors duration-300 rounded text-zinc-100 text-sm"
           >
             Export CSV
           </button>
