@@ -372,6 +372,7 @@ function DelegatesTable({
             <th className="py-2 text-right hidden md:table-cell">
               Delegations
             </th>
+            <th className="py-2 text-right hidden lg:table-cell">Voted #</th>
           </tr>
         </thead>
         <tbody className="font-mono">
@@ -404,6 +405,22 @@ function DelegatesTable({
                   row.non_zero_delegations
                 )}
               </td>
+              <td className="hidden lg:table-cell text-right">
+                {row.on_chain_votes === 0 || !row.on_chain_votes ? (
+                  <div className="flex justify-end">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M4 10h12a1 1 0 010 2H4a1 1 0 110-2z" />
+                    </svg>
+                  </div>
+                ) : (
+                  row.on_chain_votes
+                )}
+              </td>
             </tr>
           ))}
           {Array.from(
@@ -417,6 +434,7 @@ function DelegatesTable({
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td className="hidden md:table-cell">&nbsp;</td>
+                <td className="hidden lg:table-cell">&nbsp;</td>
               </tr>
             )
           )}
