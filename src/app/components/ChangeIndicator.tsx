@@ -4,7 +4,7 @@ import { Address, formatUnits } from "viem";
 
 function ChangeIndicator({
   change,
-  threshold = 10_000,
+  threshold = 5_000,
   isNew = true,
   location = "right",
 }: {
@@ -106,7 +106,7 @@ function formatChange(value: number, showSign: boolean = false): string {
     }).format(millions)}m`;
   }
 
-  if (showSign) {
+  if (showSign && value !== 0) {
     return `${isNegative ? "+" : "-"}${formattedValue}`;
   }
   return formattedValue;
