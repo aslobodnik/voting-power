@@ -54,7 +54,7 @@ export default function Home() {
   useDelegateSearch(searchInput, setDelegateAddress);
 
   return (
-    <div className="flex flex-col gap-14">
+    <div className="flex flex-col gap-14 overflow-x-hidden">
       {/* Top Delegates Table */}
       <DelegatesTable
         setDelegateAddress={setDelegateAddress}
@@ -344,8 +344,8 @@ function DelegatesTable({
         <h2 className="text-zinc-100 text-right text-2xl font-bold">
           Top 100 ENS Delegates
         </h2>
-        <div className="flex items-center gap-4">
-          <div className="text-xs font-mono text-zinc-600">
+        <div className="flex  items-center gap-4">
+          <div className="text-xs  hidden md:inline font-mono text-zinc-600">
             {getRelativeTime(updatedAt)}
           </div>
           <button
@@ -654,7 +654,7 @@ function DelegateCard({
         </div>
       </div>
       {!loading && (
-        <div className="hidden ml-10 lg:flex lg:-mb-8 lg:flex-col lg:justify-end w-full -mr-4 mx-auto">
+        <div className="hidden ml-10 lg:flex lg:-mb-8 lg:flex-col lg:justify-end w-full mx-auto">
           <Suspense>
             <DelegatePowerChart delegateAddress={delegateAddress} />
           </Suspense>
