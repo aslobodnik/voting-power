@@ -1,13 +1,7 @@
 import { unstable_noStore } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT as unknown as number,
-});
+import { pool } from "@/app/lib/db";
 
 export async function GET(request: NextRequest) {
   unstable_noStore();
