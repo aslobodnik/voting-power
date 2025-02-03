@@ -3,30 +3,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, Suspense } from "react";
-
-import { Address, formatUnits } from "viem";
-import { getEnsName } from "viem/ens";
 import Papa from "papaparse";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Address } from "viem";
+import { getEnsName } from "viem/ens";
+import { useEnsAvatar } from "wagmi";
+
+import AddressCell from "./components/AddressCell";
 import ChangeIndicator from "./components/ChangeIndicator";
-
-import {
-  fetchTopDelegates,
-  fetchUpdatedAt,
-  fetchDelegateRank,
-} from "./lib/client-api";
-import { formatToken, ShortenAddress, getRelativeTime } from "./lib/helpers";
-import publicClient from "./lib/publicClient";
-
-// Hooks
+import DelegatePowerChart from "./components/DelegatePowerChart";
+import Pagination from "./components/Pagination";
 import useDelegateSearch from "./hooks/useDelegateSearch";
 import useDelegators from "./hooks/useDelegators";
 import useVoteData from "./hooks/useVoteData";
-
-// Components
-import AddressCell from "./components/AddressCell";
-import Pagination from "./components/Pagination";
-import DelegatePowerChart from "./components/DelegatePowerChart";
+import {
+  fetchDelegateRank,
+  fetchTopDelegates,
+  fetchUpdatedAt,
+} from "./lib/client-api";
+import { ShortenAddress, formatToken, getRelativeTime } from "./lib/helpers";
+import publicClient from "./lib/publicClient";
 
 export default function Home() {
   const [delegateAddress, setDelegateAddress] = useState("");
@@ -689,16 +685,15 @@ function DelegateCard({
 }
 
 function Avatar({ ensName, loading }: { ensName: string; loading?: boolean }) {
-  const [imgSrc, setImgSrc] = useState(
-    `https://metadata.ens.domains/mainnet/avatar/${ensName}`
-  );
+  const { data: imgSrc } = useEnsAvatar({ name: ensName });
   const [loadError, setLoadError] = useState(false);
 
   return (
     <div className="min-w-fit">
       {ensName &&
         (loading ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src="/loading.svg"
             alt="loading"
             width={110}
@@ -706,8 +701,9 @@ function Avatar({ ensName, loading }: { ensName: string; loading?: boolean }) {
             className="p-8"
           />
         ) : (
-          <Image
-            src={loadError ? "default_avatar.svg" : imgSrc}
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={loadError ? "default_avatar.svg" : (imgSrc ?? "/loading.svg")}
             onError={() => setLoadError(true)}
             alt="Avatar"
             width={110}
