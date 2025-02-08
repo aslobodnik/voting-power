@@ -1,9 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
-import publicClient from "../lib/publicClient";
-import { Address } from "viem";
-import { ShortenAddress } from "../lib/helpers";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Address } from "viem";
+
+import { ShortenAddress } from "../lib/helpers";
+import publicClient from "../lib/publicClient";
 
 function AddressCell({
   onClick,

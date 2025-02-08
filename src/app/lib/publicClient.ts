@@ -1,12 +1,9 @@
 "use client";
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
 
-const publicClient = createPublicClient({
-  chain: mainnet,
-  transport: http(process.env.NEXT_PUBLIC_RPC_ENDPOINT),
-  batch: {
-    multicall: true,
-  },
-});
+import { publicActions } from "viem";
+
+import { wagmiConfig } from "../components/ClientProviders";
+
+export const publicClient = wagmiConfig.getClient().extend(publicActions);
+
 export default publicClient;
