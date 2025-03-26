@@ -459,8 +459,9 @@ function DelegateCard({
   const [github, setGithub] = useState("");
   const [email, setEmail] = useState("");
   const [x, setX] = useState("");
-  const [loading, setLoading] = useState(false); // State to track loading status
+  const [loading, setLoading] = useState(false);
   const [rank, setRank] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setX("");
@@ -469,50 +470,31 @@ function DelegateCard({
     setGithub("");
     setEnsName("");
     setRank("");
+    setAvatarUrl(null);
 
     const fetchEnsData = async () => {
-      setLoading(true); // Start loading
-      console.log("loading....");
+      setLoading(true);
       if (delegateAddress) {
         try {
-          const ens = await getEnsName(publicClient, {
-            address: delegateAddress as Address,
-          });
-          if (ens) {
-            setEnsName(ens);
-
-            const ensX = await publicClient.getEnsText({
-              name: ens,
-              key: "com.twitter",
-            });
-            const ensTelegram = await publicClient.getEnsText({
-              name: ens,
-              key: "org.telegram",
-            });
-            const ensEmail = await publicClient.getEnsText({
-              name: ens,
-              key: "email",
-            });
-            const ensGithub = await publicClient.getEnsText({
-              name: ens,
-              key: "com.github",
-            });
-
-            setX(ensX || "");
-            setTelegram(ensTelegram || "");
-            setEmail(ensEmail || "");
-            setGithub(ensGithub || "");
+          const response = await fetch(`https://ens-api.slobo.xyz/address/${delegateAddress}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.name) {
+              setEnsName(data.name);
+              setX(data.texts?.["com.twitter"] || "");
+              setTelegram(data.texts?.["org.telegram"] || "");
+              setEmail(data.texts?.["email"] || "");
+              setGithub(data.texts?.["com.github"] || "");
+              setAvatarUrl(data.avatar?.lg || null);
+            }
           }
         } catch (error) {
           console.error("Error fetching ENS data:", error);
         }
-
-        setLoading(false); // End loading
-      } else {
-        setLoading(false); // Ensure loading is set to false if no delegateAddress
       }
-      console.log("done loading....");
+      setLoading(false);
     };
+
     const fetchRank = async () => {
       try {
         const data = await fetchDelegateRank(delegateAddress);
@@ -522,6 +504,7 @@ function DelegateCard({
         console.error(`There was a problem fetching rank: ${errorMessage}`);
       }
     };
+
     fetchRank();
     fetchEnsData();
   }, [delegateAddress]);
@@ -531,7 +514,7 @@ function DelegateCard({
       <div className="flex relative gap-4 w-fit ">
         <RankBadge rank={Number(rank)} />
 
-        {ensName && <Avatar ensName={ensName} loading={loading} />}
+        {ensName && <Avatar avatarUrl={avatarUrl} loading={loading} />}
         {!ensName && (
           <Image
             src={"default_avatar.svg"}
@@ -684,33 +667,83 @@ function DelegateCard({
   );
 }
 
-function Avatar({ ensName, loading }: { ensName: string; loading?: boolean }) {
-  const { data: imgSrc } = useEnsAvatar({ name: ensName });
+function Avatar({ avatarUrl, loading }: { avatarUrl: string | null; loading?: boolean }) {
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  useEffect(() => {
+    if (avatarUrl && !loading) {
+      const fetchAvatar = async () => {
+        setIsFetching(true);
+        try {
+          const response = await fetch(avatarUrl);
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setImgSrc(url);
+          } else {
+            setLoadError(true);
+          }
+        } catch (error) {
+          setLoadError(true);
+        } finally {
+          setIsFetching(false);
+        }
+      };
+
+      fetchAvatar();
+    }
+  }, [avatarUrl, loading]);
+
+  // Cleanup object URL on unmount or when image changes
+  useEffect(() => {
+    return () => {
+      if (imgSrc) {
+        URL.revokeObjectURL(imgSrc);
+      }
+    };
+  }, [imgSrc]);
+
+  // Show loading state while fetching ENS data or avatar
+  if (loading || isFetching) {
+    return (
+      <div className="min-w-fit">
+        <Image
+          src="/loading.svg"
+          alt="loading"
+          width={110}
+          height={110}
+          className="p-8"
+        />
+      </div>
+    );
+  }
+
+  // If we have an error or no image source, show the default avatar
+  if (loadError || !imgSrc) {
+    return (
+      <div className="min-w-fit">
+        <Image
+          src="default_avatar.svg"
+          alt="Avatar"
+          width={110}
+          height={110}
+          className="rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-fit">
-      {ensName &&
-        (loading ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src="/loading.svg"
-            alt="loading"
-            width={110}
-            height={110}
-            className="p-8"
-          />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={loadError ? "default_avatar.svg" : (imgSrc ?? "/loading.svg")}
-            onError={() => setLoadError(true)}
-            alt="Avatar"
-            width={110}
-            height={110}
-            className="rounded-full"
-          />
-        ))}
+      <Image
+        src={imgSrc}
+        alt="Avatar"
+        width={110}
+        height={110}
+        className="rounded-full"
+      />
     </div>
   );
 }
@@ -725,27 +758,33 @@ function SearchInput({
   searchInputRef: React.RefObject<HTMLInputElement>;
 }) {
   const searchParams = useSearchParams();
-
   const address = searchParams.get("address") || "";
+  const isSearching = useDelegateSearch(searchInput, setSearchInput);
 
   useEffect(() => {
     if (!searchInput && address) {
       setSearchInput(address);
     }
   }, [address, searchInput, setSearchInput]);
+
   return (
-    <div className="relative ">
+    <div className="relative">
       <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
         <Image src="icon_search.svg" alt="Search Icon" width={20} height={20} />
       </div>
       <input
-        className="bg-zinc-800 w-full  max-w-lg  min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
+        className="bg-zinc-800 w-full max-w-lg min-w-80 transition-shadow duration-1000 focus:ring-2 focus:ring-zinc-400 text-zinc-100 py-2 pl-11 pr-3 rounded focus:outline-none"
         placeholder="slobo.eth or 0x5423..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         ref={searchInputRef}
         spellCheck="false"
       />
+      {isSearching && (
+        <div className="absolute inset-y-0 right-3 flex items-center">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-zinc-400 border-t-transparent"></div>
+        </div>
+      )}
     </div>
   );
 }

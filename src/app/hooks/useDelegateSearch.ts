@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { normalize } from "viem/ens";
 import publicClient from "../lib/publicClient";
 import { isAddress } from "viem";
@@ -8,8 +8,11 @@ function useDelegateSearch(
   searchInput: string,
   setDelegateAddress: (address: string) => void
 ) {
+  const [isSearching, setIsSearching] = useState(false);
+
   useEffect(() => {
     const handleSearch = async (input: string) => {
+      setIsSearching(true);
       if (isAddress(input)) {
         setDelegateAddress(input);
       } else if (input.includes(".")) {
@@ -20,30 +23,26 @@ function useDelegateSearch(
           });
           if (ensAddress) {
             setDelegateAddress(ensAddress);
-          } else {
-            setDelegateAddress("");
           }
         } catch (error) {
           console.error("Error resolving ENS name:", error);
-          setDelegateAddress("");
         }
-      } else if (/^[a-zA-Z0-9]+$/.test(input)) {
-        setDelegateAddress("");
       }
+      setIsSearching(false);
     };
 
-    const debouncedHandleSearch = debounce(handleSearch, 300);
+    const debouncedHandleSearch = debounce(handleSearch, 500);
 
     if (searchInput) {
       debouncedHandleSearch(searchInput);
-    } else {
-      setDelegateAddress("");
     }
 
     return () => {
       debouncedHandleSearch.clear();
     };
   }, [searchInput, setDelegateAddress]);
+
+  return isSearching;
 }
 
 export default useDelegateSearch;
