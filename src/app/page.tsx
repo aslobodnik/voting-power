@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Papa from "papaparse";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Address } from "viem";
-import { getEnsName } from "viem/ens";
-import { useEnsAvatar } from "wagmi";
+
 
 import AddressCell from "./components/AddressCell";
 import ChangeIndicator from "./components/ChangeIndicator";
@@ -22,7 +20,7 @@ import {
   fetchUpdatedAt,
 } from "./lib/client-api";
 import { ShortenAddress, formatToken, getRelativeTime } from "./lib/helpers";
-import publicClient from "./lib/publicClient";
+
 
 export default function Home() {
   const [delegateAddress, setDelegateAddress] = useState("");
@@ -531,7 +529,17 @@ function DelegateCard({
               !ensName ? "text-zinc-300 text-xl" : ""
             }`}
           >
-            {ensName || (delegateAddress && "Name not set 😭")}
+            {ensName ? (
+              <Link 
+                href={`https://app.ens.domains/${ensName}`}
+                target="_blank"
+                className="hover:text-ens-blue duration-300 transition-colors"
+              >
+                {ensName}
+              </Link>
+            ) : (
+              delegateAddress && "Name not set 😭"
+            )}
           </div>
           <div className="flex gap-2">
             <div className=" text-sm h-5 font-mono">
@@ -768,7 +776,7 @@ function SearchInput({
   }, [address, searchInput, setSearchInput]);
 
   return (
-    <div className="relative">
+    <div className="relative pl-2">
       <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
         <Image src="icon_search.svg" alt="Search Icon" width={20} height={20} />
       </div>
