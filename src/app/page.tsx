@@ -529,7 +529,13 @@ function DelegateCard({
               !ensName ? "text-zinc-300 text-xl" : ""
             }`}
           >
-            {ensName ? (
+            {loading ? (
+              <div className="flex gap-2 items-center h-7">
+                <div className="w-2 h-2 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 bg-[length:200%_100%] animate-shimmer rounded-full"></div>
+                <div className="w-2 h-2 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 bg-[length:200%_100%] animate-shimmer rounded-full delay-100"></div>
+                <div className="w-2 h-2 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 bg-[length:200%_100%] animate-shimmer rounded-full delay-200"></div>
+              </div>
+            ) : ensName ? (
               <Link 
                 href={`https://app.ens.domains/${ensName}`}
                 target="_blank"
