@@ -85,7 +85,7 @@ export default function RecentActivity() {
   }, []);
 
   return (
-    <div className="rounded-lg p-5 w-full max-w-md mx-auto border border-zinc-800">
+    <div className="rounded-lg p-5 w-full max-w-xs mx-auto border border-zinc-800">
       <h2 className="text-zinc-100 text-xl font-bold mb-4">Recent Activity</h2>
       <div className="flex items-center mb-4">
         <div className="w-[7px] h-[7px] bg-zinc-700 "></div>
@@ -99,18 +99,18 @@ export default function RecentActivity() {
             item.type === "pair" ? (
               <li key={i} className="flex flex-col text-sm">
                 <span className="whitespace-nowrap flex items-center gap-1">
-                  <AddressCell delegateAddress={item.to} withLink={true} />{' '}
+                  <AddressCell delegateAddress={item.to} withLink={false} />{' '}
                   <span className="">gained</span>{' '}
                   <span className="text-emerald-400">{formatNumber(item.amount / 1e18)}</span>{' '}
                    from{' '}
-                  <AddressCell delegateAddress={item.from} withLink={true} />
+                  <AddressCell delegateAddress={item.from} withLink={false} />
                 </span>
                 <span className="text-zinc-400 text-xs mt-1">{timeAgo(item.timestamp)} ago</span>
               </li>
             ) : (
               <li key={i} className="flex flex-col text-sm">
                 <span className="whitespace-nowrap flex items-center gap-1">
-                  <AddressCell delegateAddress={item.address} withLink={true} />{' '}
+                  <AddressCell delegateAddress={item.address} withLink={false} />{' '}
                   <span className="">{item.gain ? 'gained' : 'lost'}</span>{' '}
                   <span className={item.gain ? 'text-emerald-400' : 'text-red-400'}>{formatNumber(item.amount / 1e18)}</span>
                 </span>
