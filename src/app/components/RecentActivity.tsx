@@ -85,14 +85,25 @@ export default function RecentActivity() {
   }, []);
 
   return (
-    <div className="rounded-lg p-5 w-full max-w-xs mx-auto border border-zinc-800">
+    <div className="rounded-lg p-5 w-full h-full max-w-xs mx-auto border border-zinc-800">
       <h2 className="text-zinc-100 text-xl font-bold mb-4">Recent Activity</h2>
       <div className="flex items-center mb-4">
         <div className="w-[7px] h-[7px] bg-zinc-700 "></div>
         <hr className="border-t border-zinc-700 w-full ml-2" />
       </div>
       {loading ? (
-        <div className="text-zinc-400">Loading...</div>
+        <ul className="flex flex-col gap-2 max-h-[600px] overflow-y-auto">
+          {[...Array(15)].map((_, i) => (
+            <li key={i} className="flex flex-col text-sm">
+              <span className="whitespace-nowrap flex items-center gap-1">
+                <span className="h-4 w-24 bg-zinc-700 rounded animate-pulse mr-2" />
+                <span className="h-4 w-12 bg-zinc-700 rounded animate-pulse mr-2" />
+                <span className="h-4 w-16 bg-zinc-700 rounded animate-pulse" />
+              </span>
+              <span className="h-3 w-20 bg-zinc-800 rounded mt-1 animate-pulse" />
+            </li>
+          ))}
+        </ul>
       ) : (
         <ul className="flex flex-col gap-2 max-h-[600px] overflow-y-auto">
           {displayActivity.map((item, i) =>
