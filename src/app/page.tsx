@@ -11,6 +11,7 @@ import AddressCell from "./components/AddressCell";
 import ChangeIndicator from "./components/ChangeIndicator";
 import DelegatePowerChart from "./components/DelegatePowerChart";
 import Pagination from "./components/Pagination";
+import RecentActivity from "./components/RecentActivity";
 import useDelegateSearch from "./hooks/useDelegateSearch";
 import useDelegators from "./hooks/useDelegators";
 import useVoteData from "./hooks/useVoteData";
@@ -50,10 +51,17 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-14 overflow-x-hidden">
       {/* Top Delegates Table */}
-      <DelegatesTable
-        setDelegateAddress={setDelegateAddress}
-        onDelegateClick={handleDelegateClick}
-      />
+      <div className="flex flex-col lg:flex-row w-full gap-4">
+        <div className="order-1 flex-1 w-full">
+          <DelegatesTable
+            setDelegateAddress={setDelegateAddress}
+            onDelegateClick={handleDelegateClick}
+          />
+        </div>
+        <div className="order-2 w-full lg:max-w-xs hidden lg:block">
+          <RecentActivity />
+        </div>
+      </div>
       {/* Search Delegates Section */}
       <div className="flex flex-col  gap-5 justify-between ">
         <div className="flex flex-col gap-5">
