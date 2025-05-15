@@ -35,8 +35,8 @@ function AddressCell({
   const content = (
     <span
       onClick={onClick}
-      className={`cursor-pointer group items-center flex ${
-        withLink ? "hover:underline" : ""
+      className={`group items-center flex ${
+        withLink ? "hover:underline cursor-pointer" : ""
       }`}
     >
       {ensName || ShortenAddress(delegateAddress)}
