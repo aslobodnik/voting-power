@@ -85,7 +85,7 @@ export default function RecentActivity() {
   }, []);
 
   return (
-    <div className="rounded-lg p-5 w-full h-full max-w-xs mx-auto border border-zinc-800">
+    <div className="rounded-lg p-4 w-full h-full max-w-xs mx-auto border border-zinc-800">
       <h2 className="text-zinc-100 text-xl font-bold mb-4">Recent Activity</h2>
       <div className="flex items-center mb-4">
         <div className="w-[7px] h-[7px] bg-zinc-700 "></div>
