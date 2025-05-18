@@ -117,7 +117,7 @@ export default function RecentActivity({ onDelegateClick }: { onDelegateClick?: 
                   <span className="text-emerald-400">{formatNumber(item.amount / 1e18)}</span>{' '}
                 </span>
                 <div className="flex gap-1">
-                  from{' '}
+                  <span className="text-zinc-400">from{' '}</span>
                   <AddressCell delegateAddress={item.from} withLink={false} onClick={onDelegateClick ? () => onDelegateClick(item.from) : undefined} />
                 </div>
                 {item.delegator && (
