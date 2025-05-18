@@ -11,26 +11,43 @@ export async function GET(request: NextRequest) {
     const q = `
           WITH with_lag AS (
   SELECT
-    delegate_address,
-    block_number,
-    block_timestamp,
-    log_index,
-    voting_power,
-    LAG(voting_power, 1, 0) OVER (
-      PARTITION BY delegate_address ORDER BY block_number, log_index
-    ) AS previous_power
-  FROM delegate_power
+    p.delegate_address,
+    p.block_number,
+    p.block_timestamp,
+    p.log_index,
+    p.voting_power,
+    LAG(p.voting_power,1,0)
+      OVER (PARTITION BY p.delegate_address
+            ORDER BY p.block_number, p.log_index)
+      AS previous_power
+  FROM delegate_power p
 ),
 with_change AS (
-  SELECT *,
-    COALESCE(voting_power - previous_power, voting_power) AS voting_power_change
+  SELECT
+    *,
+    COALESCE(voting_power - previous_power, voting_power)
+      AS voting_power_change
   FROM with_lag
 )
-SELECT *
-FROM with_change
-WHERE block_timestamp >= (EXTRACT(EPOCH FROM NOW() - INTERVAL '30 days'))
-and abs(voting_power_change) >= $1
-ORDER BY block_number desc;
+SELECT
+  c.*,
+  dc.args->>'delegator' AS delegator
+FROM with_change c
+LEFT JOIN events dc
+  ON dc.event_type   = 'DelegateChanged'
+ AND dc.block_number = c.block_number
+ AND dc.log_index    = c.log_index - 1
+ -- only grab the row where this delegate was involved:
+ AND (
+       dc.args->>'toDelegate'   = c.delegate_address
+    OR dc.args->>'fromDelegate' = c.delegate_address
+    )
+WHERE
+  abs(voting_power_change) >= $1
+  AND c.block_timestamp >= EXTRACT(EPOCH FROM NOW() - INTERVAL '60 days')
+ORDER BY
+  c.block_number DESC,
+  c.log_index DESC;
   `;
     const result = await pool.query(q, [threshold]);
 
