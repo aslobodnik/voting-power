@@ -41,7 +41,8 @@ function processActivity(activity: any[]): any[] {
           to: next.delegate_address,
           amount: Math.abs(curr.voting_power_change),
           block: curr.block_number,
-          timestamp: curr.block_timestamp
+          timestamp: curr.block_timestamp,
+          delegator: curr.delegator || next.delegator
         });
         paired.add(i);
         paired.add(i + 1);
@@ -57,7 +58,8 @@ function processActivity(activity: any[]): any[] {
           amount: Math.abs(item.voting_power_change),
           gain: item.voting_power_change > 0,
           block: item.block_number,
-          timestamp: item.block_timestamp
+          timestamp: item.block_timestamp,
+          delegator: item.delegator
         });
       }
     });
@@ -67,7 +69,7 @@ function processActivity(activity: any[]): any[] {
   return results;
 }
 
-export default function RecentActivity() {
+export default function RecentActivity({ onDelegateClick }: { onDelegateClick?: (address: string) => void }) {
   const [activity, setActivity] = useState<any[]>([]);
   const [displayActivity, setDisplayActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,21 +112,35 @@ export default function RecentActivity() {
             item.type === "pair" ? (
               <li key={i} className="flex flex-col text-sm">
                 <span className="whitespace-nowrap flex items-center gap-1">
-                  <AddressCell delegateAddress={item.to} withLink={false} />{' '}
-                  <span className="">gained</span>{' '}
+                  <AddressCell delegateAddress={item.to} withLink={false} onClick={onDelegateClick ? () => onDelegateClick(item.to) : undefined} />{' '}
+                  <span className="text-zinc-400">gained</span>{' '}
                   <span className="text-emerald-400">{formatNumber(item.amount / 1e18)}</span>{' '}
-                   from{' '}
-                  <AddressCell delegateAddress={item.from} withLink={false} />
                 </span>
+                <div className="flex gap-1">
+                  from{' '}
+                  <AddressCell delegateAddress={item.from} withLink={false} onClick={onDelegateClick ? () => onDelegateClick(item.from) : undefined} />
+                </div>
+                {item.delegator && (
+                  <span className="text-zinc-400 flex gap-1 text-xs ">
+                    <span className="text-zinc-400">Delegator:</span>
+                    <AddressCell delegateAddress={item.delegator} withLink={true} />
+                  </span>
+                )}
                 <span className="text-zinc-400 text-xs mt-1">{timeAgo(item.timestamp)} ago</span>
               </li>
             ) : (
               <li key={i} className="flex flex-col text-sm">
                 <span className="whitespace-nowrap flex items-center gap-1">
-                  <AddressCell delegateAddress={item.address} withLink={false} />{' '}
-                  <span className="">{item.gain ? 'gained' : 'lost'}</span>{' '}
+                  <AddressCell delegateAddress={item.address} withLink={false} onClick={onDelegateClick ? () => onDelegateClick(item.address) : undefined} />{' '}
+                  <span className="text-zinc-400">{item.gain ? 'gained' : 'lost'}</span>{' '}
                   <span className={item.gain ? 'text-emerald-400' : 'text-red-400'}>{formatNumber(item.amount / 1e18)}</span>
                 </span>
+                {item.delegator && (
+                  <span className="text-zinc-400 flex gap-1 text-xs ">
+                    <span className="text-zinc-400">Delegator:</span>
+                    <AddressCell delegateAddress={item.delegator} withLink={true} />
+                  </span>
+                )}
                 <span className="text-zinc-400 text-xs mt-1">{timeAgo(item.timestamp)} ago</span>
               </li>
             )

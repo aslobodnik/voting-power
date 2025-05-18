@@ -59,7 +59,7 @@ export default function Home() {
           />
         </div>
         <div className="order-2 w-full lg:max-w-xs hidden lg:block">
-          <RecentActivity />
+          <RecentActivity onDelegateClick={handleDelegateClick} />
         </div>
       </div>
       {/* Search Delegates Section */}
