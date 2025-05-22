@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
               SUM(delegator_balance) as total_balance
             FROM 
               current_delegations
+            WHERE
+              lower(delegate) != '0x0000000000000000000000000000000000000000'
             GROUP BY 
               delegate
           )
