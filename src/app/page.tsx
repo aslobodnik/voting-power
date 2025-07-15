@@ -825,7 +825,7 @@ function RankBadge({ rank }: { rank: number }) {
       <Image src="/badge_bg.svg" alt="badge" width={28} height={28} />
       <div
         className={`absolute inset-0 flex items-center justify-center text-zinc-200 font-bold ${
-          rank > 100 ? "text-[10px]" : "text-sm"
+          rank > 100 ? "text-[9px]" : "text-sm"
         }`}
       >
         {new Intl.NumberFormat("en-US").format(rank)}
