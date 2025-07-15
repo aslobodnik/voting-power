@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import Papa from "papaparse";
 import { Suspense, useEffect, useRef, useState } from "react";
 
-
 import AddressCell from "./components/AddressCell";
 import ChangeIndicator from "./components/ChangeIndicator";
 import DelegatePowerChart from "./components/DelegatePowerChart";
@@ -21,7 +20,6 @@ import {
   fetchUpdatedAt,
 } from "./lib/client-api";
 import { ShortenAddress, formatToken, getRelativeTime } from "./lib/helpers";
-
 
 export default function Home() {
   const [delegateAddress, setDelegateAddress] = useState("");
@@ -383,7 +381,9 @@ function DelegatesTable({
               key={index}
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
-              <td className="py-3 text-center">{row.rank}</td>
+              <td className="py-3 text-center">
+                {new Intl.NumberFormat("en-US").format(row.rank)}
+              </td>
               <td className="text-left w-72">
                 <AddressCell
                   delegateAddress={row.delegate_address}
@@ -482,7 +482,9 @@ function DelegateCard({
       setLoading(true);
       if (delegateAddress) {
         try {
-          const response = await fetch(`https://ens-api.slobo.xyz/address/${delegateAddress}`);
+          const response = await fetch(
+            `https://ens-api.slobo.xyz/address/${delegateAddress}`
+          );
           if (response.ok) {
             const data = await response.json();
             if (data.name) {
@@ -544,7 +546,7 @@ function DelegateCard({
                 <div className="w-2 h-2 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 bg-[length:200%_100%] animate-shimmer rounded-full delay-200"></div>
               </div>
             ) : ensName ? (
-              <Link 
+              <Link
                 href={`https://app.ens.domains/${ensName}`}
                 target="_blank"
                 className="hover:text-ens-blue duration-300 transition-colors"
@@ -689,7 +691,13 @@ function DelegateCard({
   );
 }
 
-function Avatar({ avatarUrl, loading }: { avatarUrl: string | null; loading?: boolean }) {
+function Avatar({
+  avatarUrl,
+  loading,
+}: {
+  avatarUrl: string | null;
+  loading?: boolean;
+}) {
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
@@ -812,11 +820,15 @@ function SearchInput({
 }
 
 function RankBadge({ rank }: { rank: number }) {
-  return rank > 0 && rank <= 99 ? (
+  return rank > 0 ? (
     <div className="-top-6 -left-3 absolute">
       <Image src="/badge_bg.svg" alt="badge" width={28} height={28} />
-      <div className="absolute inset-0 flex items-center justify-center text-sm text-zinc-200 font-bold">
-        {rank}
+      <div
+        className={`absolute inset-0 flex items-center justify-center text-zinc-200 font-bold ${
+          rank > 100 ? "text-[10px]" : "text-sm"
+        }`}
+      >
+        {new Intl.NumberFormat("en-US").format(rank)}
       </div>
     </div>
   ) : null;
