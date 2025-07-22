@@ -2,16 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import Papa from "papaparse";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { isAddress } from "viem";
+import { normalize } from "viem/ens";
 
 import AddressCell from "./components/AddressCell";
 import ChangeIndicator from "./components/ChangeIndicator";
 import DelegatePowerChart from "./components/DelegatePowerChart";
 import Pagination from "./components/Pagination";
 import RecentActivity from "./components/RecentActivity";
-import useDelegateSearch from "./hooks/useDelegateSearch";
 import useDelegators from "./hooks/useDelegators";
 import useVoteData from "./hooks/useVoteData";
 import {
@@ -20,20 +20,47 @@ import {
   fetchUpdatedAt,
 } from "./lib/client-api";
 import { ShortenAddress, formatToken, getRelativeTime } from "./lib/helpers";
+import publicClient from "./lib/publicClient";
 
 export default function Home() {
-  const [delegateAddress, setDelegateAddress] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [resolvedAddress, setResolvedAddress] = useState("");
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounced ENS/address resolution
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      if (!searchInput) {
+        setResolvedAddress("");
+        return;
+      }
+      if (isAddress(searchInput)) {
+        setResolvedAddress(searchInput);
+      } else if (searchInput.includes(".")) {
+        try {
+          const normalizedName = normalize(searchInput);
+          const ensAddress = await publicClient.getEnsAddress({
+            name: normalizedName,
+          });
+          if (ensAddress) setResolvedAddress(ensAddress);
+        } catch (e) {
+          // Optionally handle error
+        }
+      }
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
+  // Use resolvedAddress for all data fetching
   const { delegators, votingPower, delegations, isLoading } = useDelegators(
-    delegateAddress,
+    resolvedAddress,
     hideZeroBalances
   );
 
   // Updates delegate address and ensures the search input is visible and focused
   const handleDelegateClick = (address: string) => {
-    setDelegateAddress(address);
+    setResolvedAddress(address);
     setSearchInput(address);
     if (searchInputRef.current) {
       searchInputRef.current.scrollIntoView({
@@ -44,17 +71,12 @@ export default function Home() {
     }
   };
 
-  useDelegateSearch(searchInput, setDelegateAddress);
-
   return (
     <div className="flex flex-col gap-14 overflow-x-hidden">
       {/* Top Delegates Table */}
       <div className="flex flex-col lg:flex-row w-full gap-4">
         <div className="order-1 flex-1 w-full">
-          <DelegatesTable
-            setDelegateAddress={setDelegateAddress}
-            onDelegateClick={handleDelegateClick}
-          />
+          <DelegatesTable onDelegateClick={handleDelegateClick} />
         </div>
         <div className="order-2 w-full lg:max-w-xs hidden lg:block">
           <RecentActivity onDelegateClick={handleDelegateClick} />
@@ -76,7 +98,7 @@ export default function Home() {
       <hr className="border-t border-zinc-750 " />
       {/* Delegate Card */}
       <DelegateCard
-        delegateAddress={delegateAddress}
+        delegateAddress={resolvedAddress}
         votingPower={votingPower}
         delegations={delegations}
       />
@@ -215,7 +237,6 @@ function DelegatorsTable({
 function DelegatesTable({
   onDelegateClick,
 }: {
-  setDelegateAddress: (address: string) => void;
   onDelegateClick?: (address: string) => void;
 }) {
   const [data, setData] = useState<Delegate[]>([]);
@@ -787,16 +808,6 @@ function SearchInput({
   setSearchInput: (searchInput: string) => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
 }) {
-  const searchParams = useSearchParams();
-  const address = searchParams.get("address") || "";
-  const isSearching = useDelegateSearch(searchInput, setSearchInput);
-
-  useEffect(() => {
-    if (!searchInput && address) {
-      setSearchInput(address);
-    }
-  }, [address, searchInput, setSearchInput]);
-
   return (
     <div className="relative pl-2">
       <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -810,11 +821,6 @@ function SearchInput({
         ref={searchInputRef}
         spellCheck="false"
       />
-      {isSearching && (
-        <div className="absolute inset-y-0 right-3 flex items-center">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-zinc-400 border-t-transparent"></div>
-        </div>
-      )}
     </div>
   );
 }
