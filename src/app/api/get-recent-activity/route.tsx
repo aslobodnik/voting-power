@@ -44,7 +44,7 @@ LEFT JOIN events dc
     )
 WHERE
   abs(voting_power_change) >= $1
-  AND c.block_timestamp >= EXTRACT(EPOCH FROM NOW() - INTERVAL '60 days')
+  AND c.block_timestamp >= EXTRACT(EPOCH FROM NOW() - INTERVAL '90 days')
 ORDER BY
   c.block_number DESC,
   c.log_index DESC;
