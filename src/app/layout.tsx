@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 
 import { ClientProviders } from "./components/ClientProviders";
 import NavBar from "./components/NavBar";
@@ -32,6 +33,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-SEGEXJQ94S"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-SEGEXJQ94S');
+          `}
+        </Script>
+      </head>
       <ClientProviders>
         <body className={roboto.className}>
           <NavBar />
