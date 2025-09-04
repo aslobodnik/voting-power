@@ -244,6 +244,7 @@ function DelegatesTable({
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [updatedAt, setUpdatedAt] = useState("");
+  const [votableSupply, setVotableSupply] = useState(0);
 
   const rowsPerPage = 10;
   const totalPages = Math.ceil(data.length / rowsPerPage);
@@ -301,6 +302,24 @@ function DelegatesTable({
     };
 
     fetchUpdatedAtTimestamp();
+  }, []);
+
+  useEffect(() => {
+    const fetchVotableSupply = async () => {
+      try {
+        const response = await fetch("/api/get-votable-supply");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.length > 0) {
+            setVotableSupply(Number(data.data[0].votable_supply));
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching votable supply:", e);
+      }
+    };
+
+    fetchVotableSupply();
   }, []);
 
   const handleClick = (address: string) => {
@@ -467,6 +486,9 @@ function DelegatesTable({
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
+        <div className="text-sm font-mono text-zinc-400">
+          Votable: {formatToken(BigInt(votableSupply))}
+        </div>
       </div>
     </div>
   );
