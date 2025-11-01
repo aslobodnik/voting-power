@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   unstable_noStore();
   try {
     const thresholdParam = request.nextUrl.searchParams.get("threshold");
-    const threshold = thresholdParam ? Number(thresholdParam) : 10e20;
+    const threshold = thresholdParam ? Number(thresholdParam) : 5e21;
     const q = `
 -- ============================================================================
 -- RECENT ACTIVITY QUERY
