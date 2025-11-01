@@ -245,6 +245,7 @@ function DelegatesTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [updatedAt, setUpdatedAt] = useState("");
   const [votableSupply, setVotableSupply] = useState(0);
+  const [showActivity, setShowActivity] = useState(false);
 
   const rowsPerPage = 10;
   const totalPages = Math.ceil(data.length / rowsPerPage);
@@ -381,9 +382,40 @@ function DelegatesTable({
   return (
     <div className="bg-zinc-800 p-4 rounded-lg">
       <div className="flex justify-between items-center mb-4 mt-4">
-        <h2 className="text-zinc-100 text-right text-2xl font-bold">
-          Top 100 ENS Delegates
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-zinc-100 text-right text-2xl font-bold">
+            {showActivity ? "Recent Activity" : "Top 100 ENS Delegates"}
+          </h2>
+          <button
+            onClick={() => setShowActivity(!showActivity)}
+            className="md:hidden p-1.5 hover:bg-zinc-700 transition-colors duration-300 rounded text-zinc-400 hover:text-zinc-100"
+            title={showActivity ? "Show Top Delegates" : "Show Recent Activity"}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              {showActivity ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
         <div className="flex  items-center gap-4">
           <div className="text-xs  hidden md:inline font-mono text-zinc-600">
             {getRelativeTime(updatedAt)}
@@ -400,21 +432,22 @@ function DelegatesTable({
         <div className="w-[7px] h-[7px] bg-zinc-700 "></div>
         <hr className="border-t border-zinc-700 w-full ml-2" />
       </div>
-      <table className="w-full">
-        <thead>
-          <tr className="text-left text-zinc-400">
-            <th className="py-2 w-24 text-center">Rank</th>
-            <th className="py-2 text-left">Delegate</th>
-            <th className="py-2 text-right ">Voting Power</th>
-            <th className="py-2 text-right md:whitespace-nowrap">
-              <span className="hidden md:inline">30 Day </span>Δ
-            </th>
-            <th className="py-2 text-right hidden md:table-cell">
-              Delegations
-            </th>
-            <th className="py-2 text-right hidden lg:table-cell">Voted #</th>
-          </tr>
-        </thead>
+      <div className={showActivity ? "hidden md:block" : ""}>
+        <table className="w-full">
+            <thead>
+              <tr className="text-left text-zinc-400">
+                <th className="py-2 w-24 text-center">Rank</th>
+                <th className="py-2 text-left">Delegate</th>
+                <th className="py-2 text-right ">Voting Power</th>
+                <th className="py-2 text-right md:whitespace-nowrap">
+                  <span className="hidden md:inline">30 Day </span>Δ
+                </th>
+                <th className="py-2 text-right hidden md:table-cell">
+                  Delegations
+                </th>
+                <th className="py-2 text-right hidden lg:table-cell">Voted #</th>
+              </tr>
+            </thead>
         <tbody className="font-mono">
           {currentData.map((row, index) => (
             <tr
@@ -479,17 +512,23 @@ function DelegatesTable({
             )
           )}
         </tbody>
-      </table>
-      <div className="mt-4 flex justify-between items-center text-zinc-400">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-        <div className="text-sm font-mono text-zinc-400">
-          Votable: {formatToken(BigInt(votableSupply))}
+        </table>
+        <div className="mt-4 flex justify-between items-center text-zinc-400">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+          <div className="text-sm font-mono text-zinc-400">
+            Votable: {formatToken(BigInt(votableSupply))}
+          </div>
         </div>
       </div>
+      {showActivity && (
+        <div className="md:hidden">
+          <RecentActivity onDelegateClick={onDelegateClick} compact={true} />
+        </div>
+      )}
     </div>
   );
 }
