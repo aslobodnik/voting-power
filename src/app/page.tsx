@@ -246,6 +246,8 @@ function DelegatesTable({
   const [updatedAt, setUpdatedAt] = useState("");
   const [votableSupply, setVotableSupply] = useState(0);
   const [showActivity, setShowActivity] = useState(false);
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const rowsPerPage = 10;
   const totalPages = Math.ceil(data.length / rowsPerPage);
@@ -347,7 +349,49 @@ function DelegatesTable({
     return delegate;
   });
 
-  const currentData = enrichedDelegates.slice(startIndex, endIndex);
+  const sortedDelegates = sortField
+    ? [...enrichedDelegates].sort((a, b) => {
+        let aVal: number, bVal: number;
+        switch (sortField) {
+          case "voting_power":
+            aVal = Number(a.voting_power);
+            bVal = Number(b.voting_power);
+            break;
+          case "change":
+            aVal = Number(a.voting_power - a.voting_power_30d_ago);
+            bVal = Number(b.voting_power - b.voting_power_30d_ago);
+            break;
+          case "delegations":
+            aVal = a.non_zero_delegations;
+            bVal = b.non_zero_delegations;
+            break;
+          case "votes":
+            aVal = a.on_chain_votes || 0;
+            bVal = b.on_chain_votes || 0;
+            break;
+          default:
+            aVal = a.rank;
+            bVal = b.rank;
+        }
+        return sortDirection === "desc" ? bVal - aVal : aVal - bVal;
+      })
+    : enrichedDelegates;
+
+  const currentData = sortedDelegates.slice(startIndex, endIndex);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      if (sortDirection === "desc") {
+        setSortDirection("asc");
+      } else {
+        setSortField(null);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    setCurrentPage(1);
+  };
 
   const handleExportCSV = () => {
     // Prepare the data for CSV export
@@ -441,14 +485,39 @@ function DelegatesTable({
               <tr className="text-left text-zinc-400">
                 <th className="py-2 w-24 text-center">Rank</th>
                 <th className="py-2 text-left">Delegate</th>
-                <th className="py-2 text-right ">Voting Power</th>
-                <th className="py-2 text-right md:whitespace-nowrap">
+                <th
+                  className="py-2 text-right cursor-pointer hover:text-zinc-200 transition-colors duration-200 select-none"
+                  onClick={() => handleSort("voting_power")}
+                >
+                  Voting Power{sortField === "voting_power" && (
+                    <span className="ml-1 text-xs">{sortDirection === "desc" ? "↓" : "↑"}</span>
+                  )}
+                </th>
+                <th
+                  className="py-2 text-right md:whitespace-nowrap cursor-pointer hover:text-zinc-200 transition-colors duration-200 select-none"
+                  onClick={() => handleSort("change")}
+                >
                   <span className="hidden md:inline">30 Day </span>Δ
+                  {sortField === "change" && (
+                    <span className="ml-1 text-xs">{sortDirection === "desc" ? "↓" : "↑"}</span>
+                  )}
                 </th>
-                <th className="py-2 text-right hidden md:table-cell">
-                  Delegations
+                <th
+                  className="py-2 text-right hidden md:table-cell cursor-pointer hover:text-zinc-200 transition-colors duration-200 select-none"
+                  onClick={() => handleSort("delegations")}
+                >
+                  Delegations{sortField === "delegations" && (
+                    <span className="ml-1 text-xs">{sortDirection === "desc" ? "↓" : "↑"}</span>
+                  )}
                 </th>
-                <th className="py-2 text-right hidden lg:table-cell">Voted #</th>
+                <th
+                  className="py-2 text-right hidden lg:table-cell cursor-pointer hover:text-zinc-200 transition-colors duration-200 select-none"
+                  onClick={() => handleSort("votes")}
+                >
+                  Voted #{sortField === "votes" && (
+                    <span className="ml-1 text-xs">{sortDirection === "desc" ? "↓" : "↑"}</span>
+                  )}
+                </th>
               </tr>
             </thead>
         <tbody className="font-mono">
