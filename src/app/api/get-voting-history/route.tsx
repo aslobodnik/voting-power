@@ -1,19 +1,11 @@
 import { unstable_noStore } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
-
-const GOVERNANCE_INDEXER_URL =
-  "https://ens-governance-indexer-production.up.railway.app/";
-
-type VoterInfo = {
-  proposalIds: Set<string>;
-  latestTimestamp: number;
-};
+import { governorPool } from "@/app/lib/db";
 
 export async function POST(request: NextRequest) {
   unstable_noStore();
   try {
     const body = await request.json();
-
     if (!body.addresses || !Array.isArray(body.addresses)) {
       return NextResponse.json(
         { error: "Invalid input: addresses must be provided as an array" },
@@ -21,70 +13,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const voterAddresses = body.addresses;
+    const addresses = body.addresses.map((a: string) => a.toLowerCase());
 
-    const graphqlQuery = {
-      query: `
-  {
-    votes(where: { voter_in: ${JSON.stringify(voterAddresses)} } limit: 1000) {
-      items {
-        id
-        proposalId
-        support
-        reason
-        voter
-        weight
-        timestamp
-      }
-    }
-  }
-`,
-    };
-    const response = await fetch(GOVERNANCE_INDEXER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(graphqlQuery),
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    const dataItems = data.data.votes.items;
-
-    // Group by voter and count unique proposalIds, track latest timestamp
-    // Group by voter and count unique proposalIds, track latest timestamp
-    const result = dataItems.reduce(
-      (acc: Record<string, VoterInfo>, vote: Vote) => {
-        if (!acc[vote.voter]) {
-          acc[vote.voter] = {
-            proposalIds: new Set(),
-            latestTimestamp: vote.timestamp,
-          };
-        }
-        acc[vote.voter].proposalIds.add(vote.proposalId);
-
-        // Update latest timestamp if the current vote has a more recent timestamp
-        if (vote.timestamp > acc[vote.voter].latestTimestamp) {
-          acc[vote.voter].latestTimestamp = vote.timestamp;
-        }
-
-        return acc;
-      },
-      {} as Record<string, VoterInfo>
+    const result = await governorPool.query(
+      `SELECT
+        LOWER(voter) as voter,
+        COUNT(DISTINCT proposal_id) as unique_proposal_count,
+        MAX(block_timestamp) as latest_timestamp
+      FROM votes
+      WHERE LOWER(voter) = ANY($1)
+      GROUP BY LOWER(voter)`,
+      [addresses]
     );
 
-    // Simpler version of the mapping step
-    const counts = Object.entries(result as Record<string, VoterInfo>).map(
-      ([voter, voterInfo]) => ({
-        voter,
-        uniqueProposalCount: voterInfo.proposalIds.size,
-        latestTimestamp: voterInfo.latestTimestamp,
-      })
-    );
+    const counts = result.rows.map((row) => ({
+      voter: row.voter,
+      uniqueProposalCount: Number(row.unique_proposal_count),
+      latestTimestamp: row.latest_timestamp,
+    }));
 
     return NextResponse.json({
       message: "Vote data retrieved successfully",
