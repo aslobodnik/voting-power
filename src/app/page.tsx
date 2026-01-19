@@ -494,15 +494,12 @@ function DelegatesTable({
                     </svg>
                   </div>
                 ) : (
-                  <span
-                    className="cursor-default group relative"
-                    title={`For: ${row.votes_for || 0} · Against: ${row.votes_against || 0} · Abstain: ${row.votes_abstain || 0}`}
-                  >
+                  <span className="cursor-default group relative">
                     {row.on_chain_votes}
-                    <span className="invisible group-hover:visible absolute right-0 top-full mt-1 px-2 py-1 bg-zinc-800 text-xs rounded whitespace-nowrap z-10 border border-zinc-700">
-                      <span className="text-green-400">{row.votes_for || 0}</span>
+                    <span className="pointer-events-none absolute right-0 top-full mt-1 px-2 py-1 bg-zinc-800 text-xs rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <span className="text-green-500">{row.votes_for || 0}</span>
                       {" · "}
-                      <span className="text-red-400">{row.votes_against || 0}</span>
+                      <span className="text-red-500">{row.votes_against || 0}</span>
                       {" · "}
                       <span className="text-zinc-400">{row.votes_abstain || 0}</span>
                     </span>
