@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
       `SELECT
         LOWER(voter) as voter,
         COUNT(DISTINCT proposal_id) as unique_proposal_count,
+        COUNT(DISTINCT proposal_id) FILTER (WHERE support = 1) as votes_for,
+        COUNT(DISTINCT proposal_id) FILTER (WHERE support = 0) as votes_against,
+        COUNT(DISTINCT proposal_id) FILTER (WHERE support = 2) as votes_abstain,
         MAX(block_timestamp) as latest_timestamp
       FROM votes
       WHERE LOWER(voter) = ANY($1)
@@ -29,6 +32,9 @@ export async function POST(request: NextRequest) {
     const counts = result.rows.map((row) => ({
       voter: row.voter,
       uniqueProposalCount: Number(row.unique_proposal_count),
+      votesFor: Number(row.votes_for),
+      votesAgainst: Number(row.votes_against),
+      votesAbstain: Number(row.votes_abstain),
       latestTimestamp: row.latest_timestamp,
     }));
 

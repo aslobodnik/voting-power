@@ -7,6 +7,9 @@ type Delegate = {
   non_zero_delegations: number;
   latest_vote_timestamp?: bigint;
   on_chain_votes?: number;
+  votes_for?: number;
+  votes_against?: number;
+  votes_abstain?: number;
   voting_power_30d_ago: bigint;
 };
 
@@ -44,5 +47,8 @@ type Vote = {
 type VoteData = {
   voter: string;
   uniqueProposalCount: number;
+  votesFor: number;
+  votesAgainst: number;
+  votesAbstain: number;
   latestTimestamp: string;
 };

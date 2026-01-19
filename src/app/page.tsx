@@ -339,6 +339,9 @@ function DelegatesTable({
         ...delegate,
         latest_vote_timestamp: vote.latestTimestamp,
         on_chain_votes: vote.uniqueProposalCount,
+        votes_for: vote.votesFor,
+        votes_against: vote.votesAgainst,
+        votes_abstain: vote.votesAbstain,
       };
     }
     return delegate;
@@ -491,7 +494,19 @@ function DelegatesTable({
                     </svg>
                   </div>
                 ) : (
-                  row.on_chain_votes
+                  <span
+                    className="cursor-default group relative"
+                    title={`For: ${row.votes_for || 0} · Against: ${row.votes_against || 0} · Abstain: ${row.votes_abstain || 0}`}
+                  >
+                    {row.on_chain_votes}
+                    <span className="invisible group-hover:visible absolute right-0 top-full mt-1 px-2 py-1 bg-zinc-800 text-xs rounded whitespace-nowrap z-10 border border-zinc-700">
+                      <span className="text-green-400">{row.votes_for || 0}</span>
+                      {" · "}
+                      <span className="text-red-400">{row.votes_against || 0}</span>
+                      {" · "}
+                      <span className="text-zinc-400">{row.votes_abstain || 0}</span>
+                    </span>
+                  </span>
                 )}
               </td>
             </tr>
