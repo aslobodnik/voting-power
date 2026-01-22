@@ -17,19 +17,20 @@ export async function POST(request: NextRequest) {
 
     const result = await governorPool.query(
       `SELECT
-        LOWER(proposer) as proposer,
-        COUNT(*) as proposals_created,
-        SUM(array_length(targets, 1)) as total_executables
-      FROM proposals
-      WHERE LOWER(proposer) = ANY($1)
-      GROUP BY LOWER(proposer)`,
+        LOWER(p.proposer) as proposer,
+        COUNT(DISTINCT p.proposal_id) as proposals_created,
+        COUNT(DISTINCT CASE WHEN pl.event_type = 'executed' THEN p.proposal_id END) as proposals_passed
+      FROM proposals p
+      LEFT JOIN proposal_lifecycle pl ON p.proposal_id = pl.proposal_id
+      WHERE LOWER(p.proposer) = ANY($1)
+      GROUP BY LOWER(p.proposer)`,
       [addresses]
     );
 
     const stats = result.rows.map((row) => ({
       proposer: row.proposer,
       proposalsCreated: Number(row.proposals_created),
-      totalExecutables: Number(row.total_executables),
+      proposalsPassed: Number(row.proposals_passed),
     }));
 
     return NextResponse.json({
