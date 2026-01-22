@@ -9,13 +9,21 @@ A Next.js web application that displays ENS token voting power data, delegate ra
 ### ens-erc20-indexer (~/ens-erc20-indexer)
 **GitHub:** `aslobodnik/ens-erc20-indexer`
 
-The indexer that populates the database this app queries. Any database schema changes must be coordinated between both projects.
+Indexes ENS token events into `voting_power` database. Provides delegate rankings, token balances, and recent activity.
 
 See `~/ens-erc20-indexer/CLAUDE.md` for:
 - Database schema documentation
 - Materialized view definitions
 - Performance optimization details
 - Cron job schedules
+
+### ens-governor-indexer (~/ens-governor-indexer)
+Indexes ENS Governor proposals and votes into `ens_governor` database.
+
+See `~/ens-governor-indexer/CLAUDE.md` for:
+- Proposals table (includes `targets[]` for executable count)
+- Votes table (support: 0=Against, 1=For, 2=Abstain)
+- Useful queries for voting history
 
 ## Tech Stack
 
