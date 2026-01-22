@@ -7,7 +7,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { isAddress } from "viem";
 import { normalize } from "viem/ens";
 
-import AddressCell from "./components/AddressCell";
+import AddressCell, { ProposerStats } from "./components/AddressCell";
 import ChangeIndicator from "./components/ChangeIndicator";
 import DelegatePowerChart from "./components/DelegatePowerChart";
 import Pagination from "./components/Pagination";
@@ -265,6 +265,8 @@ function DelegatesTable({
     error: voteError,
   } = useVoteData(data);
 
+  const [proposerStats, setProposerStats] = useState<ProposerStats[]>([]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [data]);
@@ -324,6 +326,28 @@ function DelegatesTable({
 
     fetchVotableSupply();
   }, []);
+
+  useEffect(() => {
+    const fetchProposerStats = async () => {
+      if (data.length === 0) return;
+      try {
+        const addresses = data.map((d) => d.delegate_address);
+        const response = await fetch("/api/get-proposer-stats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addresses }),
+        });
+        if (response.ok) {
+          const result = await response.json();
+          setProposerStats(result.data || []);
+        }
+      } catch (e) {
+        console.error("Error fetching proposer stats:", e);
+      }
+    };
+
+    fetchProposerStats();
+  }, [data]);
 
   const handleClick = (address: string) => {
     if (onDelegateClick) {
@@ -533,6 +557,9 @@ function DelegatesTable({
                 <AddressCell
                   delegateAddress={row.delegate_address}
                   onClick={() => handleClick(row.delegate_address)}
+                  proposerStats={proposerStats.find(
+                    (p) => p.proposer.toLowerCase() === row.delegate_address.toLowerCase()
+                  )}
                 />
               </td>
               <td className="w-48">{formatToken(row.voting_power)}</td>

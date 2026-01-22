@@ -7,14 +7,22 @@ import { Address } from "viem";
 import { ShortenAddress } from "../lib/helpers";
 import publicClient from "../lib/publicClient";
 
+export interface ProposerStats {
+  proposer: string;
+  proposalsCreated: number;
+  proposalsPassed: number;
+}
+
 function AddressCell({
   onClick,
   delegateAddress,
   withLink,
+  proposerStats,
 }: {
   delegateAddress: string;
   onClick?: () => void;
   withLink?: boolean;
+  proposerStats?: ProposerStats;
 }) {
   const [ensName, setEnsName] = useState<string | null>(null);
 
@@ -32,14 +40,25 @@ function AddressCell({
 
     fetchEnsName();
   }, [delegateAddress]);
+
+  const isProposer = proposerStats && proposerStats.proposalsCreated > 0;
+  const passRate = isProposer
+    ? Math.round((proposerStats.proposalsPassed / proposerStats.proposalsCreated) * 100)
+    : 0;
+
   const content = (
     <span
       onClick={onClick}
-      className={`group cursor-pointer items-center flex ${
+      className={`group cursor-pointer items-center flex relative ${
         withLink ? "hover:underline " : ""
-      }`}
+      } ${isProposer ? "text-ens-blue" : ""}`}
     >
       {ensName || ShortenAddress(delegateAddress)}
+      {isProposer && (
+        <span className="pointer-events-none absolute left-0 top-full mt-1 px-2 py-1 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          DAO Proposals Created: {proposerStats.proposalsCreated} | {passRate}% passed
+        </span>
+      )}
     </span>
   );
   return (
