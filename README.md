@@ -16,11 +16,15 @@ Returns the rank and total balance for a specific delegate address. Accepts a `d
 
 ### `/api/get-recent-activity`
 
-Returns recent large changes in delegate voting power from the last 90 days. Includes information about which delegator was involved in the change.
+Returns recent voting power activity from the last 90 days. Accepts optional `threshold` query parameter (default: 5000 ENS). Activity types include: `delegation_initiated`, `delegation_removed`, `delegation_changed`, `delegation_to_self`, `self_delegation_initiated`, `tokens_received`, `tokens_sent`, `tokens_received_and_delegated`, `self_tokens_received`, `self_tokens_sent`.
 
 ### `/api/get-delegated-token-count`
 
 Returns the total number of delegated tokens across all delegates.
+
+### `/api/get-votable-supply`
+
+Returns the total votable supply (sum of all voting power across delegates).
 
 ### `/api/get-delegators`
 
