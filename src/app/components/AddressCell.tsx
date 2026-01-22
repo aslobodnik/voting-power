@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Address } from "viem";
@@ -51,13 +52,22 @@ function AddressCell({
       onClick={onClick}
       className={`group cursor-pointer items-center flex relative ${
         withLink ? "hover:underline " : ""
-      } ${isProposer ? "text-ens-blue" : ""}`}
+      }`}
     >
       {ensName || ShortenAddress(delegateAddress)}
       {isProposer && (
-        <span className="pointer-events-none absolute left-0 top-full mt-1 px-2 py-1 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          DAO Proposals Created: {proposerStats.proposalsCreated} | {passRate}% passed
-        </span>
+        <>
+          <Image
+            src="/icon_proposer.svg"
+            alt="DAO Proposer"
+            width={16}
+            height={16}
+            className="ml-1.5 inline-block"
+          />
+          <span className="pointer-events-none absolute left-0 top-full mt-1 px-2 py-1 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            DAO Proposals Created: {proposerStats.proposalsCreated} | {passRate}% passed
+          </span>
+        </>
       )}
     </span>
   );
