@@ -56,18 +56,18 @@ function AddressCell({
     >
       {ensName || ShortenAddress(delegateAddress)}
       {isProposer && (
-        <>
+        <span className="relative ml-1.5 hidden md:inline-block group/badge">
           <Image
             src="/icon_proposer.svg"
             alt="DAO Proposer"
             width={20}
             height={20}
-            className="ml-1.5 hidden md:inline-block"
+            className="transition-transform duration-500 ease-out group-hover/badge:scale-[5] group-hover/badge:translate-x-8 group-hover/badge:translate-y-[-40px] relative z-20"
           />
-          <span className="pointer-events-none absolute left-0 top-full mt-1 px-2 py-1 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="pointer-events-none absolute left-0 top-full mt-12 px-2 py-1 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover/badge:opacity-100 transition-opacity duration-500">
             DAO Proposals Created: {proposerStats.proposalsCreated} | {passRate}% passed
           </span>
-        </>
+        </span>
       )}
     </span>
   );
