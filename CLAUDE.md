@@ -70,6 +70,7 @@ src/app/
 | get-votable-supply | `current_delegate_power` |
 | get-updated-at | `events` |
 | get-voting-history | `votes` (governor database) |
+| get-proposer-stats | `proposals`, `proposal_lifecycle` (governor database) |
 
 ## Recent Activity Optimization (January 2026)
 
@@ -104,6 +105,15 @@ const q = `
   ORDER BY block_number DESC, log_index DESC;
 `;
 ```
+
+## Proposer Highlighting (January 2026)
+
+Delegates who have created DAO proposals are highlighted:
+- Name displayed in `text-ens-blue` (#0080BC)
+- Hover tooltip shows: "DAO Proposals Created: X | Y% passed"
+- 300ms transition for smooth appearance
+
+Uses `/api/get-proposer-stats` endpoint which queries `proposals` and `proposal_lifecycle` tables from the governor database.
 
 ## Environment Variables
 
