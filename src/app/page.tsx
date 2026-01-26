@@ -694,6 +694,7 @@ function DelegateCard({
     };
 
     const fetchRank = async () => {
+      if (!delegateAddress) return;
       try {
         const data = await fetchDelegateRank(delegateAddress);
         setRank(data);
