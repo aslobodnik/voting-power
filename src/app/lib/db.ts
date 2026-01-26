@@ -8,7 +8,7 @@ export const pool = new Pool({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT as unknown as number,
   password: process.env.DB_PASSWORD,
-  ssl: true,
+  ssl: { rejectUnauthorized: false },
 })
 
 export const governorPool = new Pool({
@@ -17,5 +17,5 @@ export const governorPool = new Pool({
   database: process.env.GOVERNOR_DB_NAME,
   port: process.env.DB_PORT as unknown as number,
   password: process.env.DB_PASSWORD,
-  ssl: true,
+  ssl: { rejectUnauthorized: false },
 })
