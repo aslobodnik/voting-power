@@ -12,8 +12,8 @@ export interface ProposerStats {
   proposalsCreated: number;
   proposalsPassed: number;
   proposalsDefeated?: number;
-  proposalsLive?: number;
-  proposalsQueued?: number;
+  liveProposalIds?: string[];
+  queuedProposalIds?: string[];
 }
 
 function AddressCell({
@@ -45,8 +45,9 @@ function AddressCell({
   }, [delegateAddress]);
 
   const isProposer = proposerStats && proposerStats.proposalsCreated > 0;
-  const hasActiveProposals = proposerStats &&
-    ((proposerStats.proposalsLive || 0) > 0 || (proposerStats.proposalsQueued || 0) > 0);
+  const liveProposals = proposerStats?.liveProposalIds || [];
+  const queuedProposals = proposerStats?.queuedProposalIds || [];
+  const hasActiveProposals = liveProposals.length > 0 || queuedProposals.length > 0;
 
   // Pass rate only counts completed proposals (passed + defeated)
   const completedProposals = isProposer
@@ -55,6 +56,8 @@ function AddressCell({
   const passRate = completedProposals > 0
     ? Math.round((proposerStats!.proposalsPassed / completedProposals) * 100)
     : null;
+
+  const proposalUrl = (id: string) => `https://dao.ens.gregskril.com/proposal/${id}`;
 
   const content = (
     <span
@@ -67,16 +70,30 @@ function AddressCell({
       {isProposer && (
         <>
           <span className={`ml-1.5 w-2 h-2 rounded-full bg-ens-blue hidden md:inline-block ${hasActiveProposals ? 'animate-pulse' : ''}`} />
-          <span className="pointer-events-none absolute left-0 top-full mt-1 px-2.5 py-1.5 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-0.5">
+          <span className="pointer-events-auto absolute left-0 top-full mt-1 px-2.5 py-1.5 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-0.5">
             <span className="text-zinc-400">DAO Proposals: {proposerStats.proposalsCreated}</span>
             {passRate !== null && (
               <span>{passRate}% passed ({proposerStats.proposalsPassed}/{completedProposals})</span>
             )}
-            {(proposerStats.proposalsLive || 0) > 0 && (
-              <span className="text-ens-blue">{proposerStats.proposalsLive} voting now</span>
+            {liveProposals.length > 0 && (
+              <a
+                href={proposalUrl(liveProposals[0])}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ens-blue hover:underline"
+              >
+                {liveProposals.length} voting now →
+              </a>
             )}
-            {(proposerStats.proposalsQueued || 0) > 0 && (
-              <span className="text-emerald-400">{proposerStats.proposalsQueued} queued</span>
+            {queuedProposals.length > 0 && (
+              <a
+                href={proposalUrl(queuedProposals[0])}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:underline"
+              >
+                {queuedProposals.length} queued →
+              </a>
             )}
           </span>
         </>

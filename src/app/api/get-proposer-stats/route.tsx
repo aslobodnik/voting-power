@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
         COUNT(*) as proposals_created,
         COUNT(CASE WHEN is_executed = 1 THEN 1 END) as proposals_passed,
         COUNT(CASE WHEN is_executed = 0 AND is_canceled = 0 AND end_block < $2 THEN 1 END) as proposals_defeated,
-        COUNT(CASE WHEN is_executed = 0 AND is_canceled = 0 AND is_queued = 0 AND end_block >= $2 THEN 1 END) as proposals_live,
-        COUNT(CASE WHEN is_queued = 1 AND is_executed = 0 THEN 1 END) as proposals_queued
+        ARRAY_AGG(CASE WHEN is_executed = 0 AND is_canceled = 0 AND is_queued = 0 AND end_block >= $2 THEN proposal_id::text END) FILTER (WHERE is_executed = 0 AND is_canceled = 0 AND is_queued = 0 AND end_block >= $2) as live_proposal_ids,
+        ARRAY_AGG(CASE WHEN is_queued = 1 AND is_executed = 0 THEN proposal_id::text END) FILTER (WHERE is_queued = 1 AND is_executed = 0) as queued_proposal_ids
       FROM proposal_status
       GROUP BY LOWER(proposer)`,
       [addresses, currentBlock]
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
       proposalsCreated: Number(row.proposals_created),
       proposalsPassed: Number(row.proposals_passed),
       proposalsDefeated: Number(row.proposals_defeated),
-      proposalsLive: Number(row.proposals_live),
-      proposalsQueued: Number(row.proposals_queued),
+      liveProposalIds: row.live_proposal_ids || [],
+      queuedProposalIds: row.queued_proposal_ids || [],
     }));
 
     return NextResponse.json({
