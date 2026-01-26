@@ -45,8 +45,8 @@ function AddressCell({
   }, [delegateAddress]);
 
   const isProposer = proposerStats && proposerStats.proposalsCreated > 0;
-  const hasLiveProposals = proposerStats && (proposerStats.proposalsLive || 0) > 0;
-  const hasQueuedProposals = proposerStats && (proposerStats.proposalsQueued || 0) > 0;
+  const hasActiveProposals = proposerStats &&
+    ((proposerStats.proposalsLive || 0) > 0 || (proposerStats.proposalsQueued || 0) > 0);
 
   // Pass rate only counts completed proposals (passed + defeated)
   const completedProposals = isProposer
@@ -68,21 +68,12 @@ function AddressCell({
         <>
           <span className="ml-1.5 relative hidden md:inline-block">
             <span className="w-2 h-2 rounded-full bg-ens-blue inline-block" />
-            {(hasLiveProposals || hasQueuedProposals) && (
+            {hasActiveProposals && (
               <span className="absolute inset-0 w-2 h-2 rounded-full bg-ens-blue animate-ping opacity-75" />
             )}
           </span>
-          <span className="pointer-events-none absolute left-0 top-full mt-1 px-2.5 py-1.5 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-0.5">
-            <span className="text-zinc-400">DAO Proposals: {proposerStats.proposalsCreated}</span>
-            {passRate !== null && (
-              <span>{passRate}% passed ({proposerStats.proposalsPassed}/{completedProposals})</span>
-            )}
-            {hasLiveProposals && (
-              <span className="text-ens-blue">{proposerStats.proposalsLive} voting now</span>
-            )}
-            {hasQueuedProposals && (
-              <span className="text-emerald-400">{proposerStats.proposalsQueued} queued</span>
-            )}
+          <span className="pointer-events-none absolute left-0 top-full mt-1 px-2 py-1 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            DAO Proposals: {proposerStats.proposalsCreated}{passRate !== null && ` | ${passRate}% passed`}
           </span>
         </>
       )}
