@@ -66,12 +66,7 @@ function AddressCell({
       {ensName || ShortenAddress(delegateAddress)}
       {isProposer && (
         <>
-          <span className="ml-1.5 relative hidden md:inline-block">
-            <span className="w-2 h-2 rounded-full bg-ens-blue inline-block" />
-            {hasActiveProposals && (
-              <span className="absolute inset-0 w-2 h-2 rounded-full bg-ens-blue animate-ping opacity-75" />
-            )}
-          </span>
+          <span className={`ml-1.5 w-2 h-2 rounded-full bg-ens-blue hidden md:inline-block ${hasActiveProposals ? 'animate-pulse' : ''}`} />
           <span className="pointer-events-none absolute left-0 top-full mt-1 px-2.5 py-1.5 bg-zinc-900 text-xs text-zinc-100 rounded whitespace-nowrap z-10 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-0.5">
             <span className="text-zinc-400">DAO Proposals: {proposerStats.proposalsCreated}</span>
             {passRate !== null && (
