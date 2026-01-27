@@ -83,7 +83,7 @@ export default function Home() {
         </div>
       </div>
       {/* Search Delegates Section */}
-      <div className="flex flex-col  gap-5 justify-between ">
+      <div id="search-section" className="flex flex-col  gap-5 justify-between ">
         <div className="flex flex-col gap-5">
           <h1 className="text-zinc-100 text-2xl">Search Delegates</h1>
           <Suspense>

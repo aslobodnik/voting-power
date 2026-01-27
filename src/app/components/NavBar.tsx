@@ -21,8 +21,20 @@ function NavBar() {
         <Image src="/ens_pill.svg" alt="ENS Logo" width={70} height={40} />
       </div>
 
-      <div className="flex-1 flex justify-end">
+      <div className="flex-1 flex justify-end items-center gap-6">
         <NavItems />
+        <button
+          onClick={() => {
+            const searchSection = document.getElementById("search-section");
+            const searchInput = searchSection?.querySelector("input");
+            searchSection?.scrollIntoView({ behavior: "smooth", block: "center" });
+            setTimeout(() => searchInput?.focus(), 500);
+          }}
+          className="text-zinc-400 hover:text-zinc-100 transition-colors duration-200"
+          aria-label="Search delegates"
+        >
+          <Image src="/icon_search.svg" alt="Search" width={18} height={18} />
+        </button>
       </div>
     </nav>
   );
