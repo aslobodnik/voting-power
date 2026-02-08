@@ -267,23 +267,24 @@ export default function RecentActivity({
               {selfText ? (
                 <span className="text-zinc-400 text-xs">{selfText}</span>
               ) : item.delegator_address ? (
-                <div className="text-xs leading-relaxed">
-                  <span className="text-zinc-400">due to </span>
-                  <AddressCell
-                    delegateAddress={item.delegator_address}
-                    withLink={true}
-                  />
+                <div className="text-xs">
                   {type === "delegation_changed" && item.from_delegate && (
-                    <>
-                      <span className="text-zinc-400"> (changed from </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-zinc-400">from</span>
                       <AddressCell
                         delegateAddress={item.from_delegate}
                         withLink={false}
                         onClick={click(item.from_delegate)}
                       />
-                      <span className="text-zinc-400">)</span>
-                    </>
+                    </div>
                   )}
+                  <div className="flex items-center gap-1">
+                    <span className="text-zinc-400">due to</span>
+                    <AddressCell
+                      delegateAddress={item.delegator_address}
+                      withLink={true}
+                    />
+                  </div>
                 </div>
               ) : null}
 
