@@ -62,7 +62,7 @@ function AddressCell({
   const content = (
     <span
       onClick={onClick}
-      className={`group cursor-pointer items-center flex relative ${
+      className={`group cursor-pointer items-center inline-flex relative ${
         withLink ? "hover:underline " : ""
       }`}
     >
