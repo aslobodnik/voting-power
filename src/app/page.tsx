@@ -660,6 +660,7 @@ function DelegateCard({
   const [rank, setRank] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [voteStats, setVoteStats] = useState<VoteData | null>(null);
+  const [totalProposals, setTotalProposals] = useState(0);
 
   useEffect(() => {
     setX("");
@@ -670,12 +671,14 @@ function DelegateCard({
     setRank("");
     setAvatarUrl(null);
     setVoteStats(null);
+    setTotalProposals(0);
 
     const fetchVoteStats = async () => {
       if (!delegateAddress) return;
       try {
-        const data = await fetchVotingHistory([delegateAddress]);
+        const { data, totalProposals: total } = await fetchVotingHistory([delegateAddress]);
         if (data.length > 0) setVoteStats(data[0]);
+        setTotalProposals(total);
       } catch (e) {
         console.error("Error fetching vote stats:", e);
       }
@@ -723,6 +726,9 @@ function DelegateCard({
   }, [delegateAddress]);
 
   const totalVotes = voteStats ? voteStats.votesFor + voteStats.votesAgainst + voteStats.votesAbstain : 0;
+  const participationPct = totalProposals > 0 && voteStats
+    ? Math.round((voteStats.uniqueProposalCount / totalProposals) * 100)
+    : 0;
 
   return (
     <div className="bg-zinc-800 rounded overflow-hidden">
@@ -897,10 +903,11 @@ function DelegateCard({
       </div>
     </div>
     {/* Voting Stats Bar */}
-    {voteStats && totalVotes > 0 && (
+    {voteStats && totalVotes > 0 && totalProposals > 0 && (
       <div className="border-t border-zinc-700 px-6 py-3 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
         <span className="text-zinc-400 text-sm whitespace-nowrap">
-          Voted <span className="text-zinc-100 font-mono">{voteStats.uniqueProposalCount}</span> proposals
+          Voted <span className="text-zinc-100 font-mono">{voteStats.uniqueProposalCount}</span>/<span className="font-mono">{totalProposals}</span>
+          <span className="text-zinc-500 ml-1">({participationPct}%)</span>
         </span>
         <div className="flex items-center gap-3 flex-1">
           <div className="flex h-1.5 flex-1 rounded-full overflow-hidden bg-zinc-700">

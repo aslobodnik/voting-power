@@ -3,6 +3,7 @@ import { fetchVotingHistory } from "../lib/client-api";
 
 function useVoteData(delegates: Delegate[]) {
   const [voteData, setVoteData] = useState<VoteData[]>([]);
+  const [totalProposals, setTotalProposals] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,8 +19,9 @@ function useVoteData(delegates: Delegate[]) {
       );
 
       try {
-        const votes = await fetchVotingHistory(voterAddresses);
+        const { data: votes, totalProposals: total } = await fetchVotingHistory(voterAddresses);
         setVoteData(votes);
+        setTotalProposals(total);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         setError(`There was a problem fetching vote data: ${errorMessage}`);
@@ -31,7 +33,7 @@ function useVoteData(delegates: Delegate[]) {
     fetchVotes();
   }, [delegates]);
 
-  return { voteData, isLoading, error };
+  return { voteData, totalProposals, isLoading, error };
 }
 
 export default useVoteData;

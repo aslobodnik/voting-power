@@ -22,7 +22,7 @@ export async function fetchTopDelegates(): Promise<Delegate[]> {
 
 export async function fetchVotingHistory(
   addresses: string[]
-): Promise<VoteData[]> {
+): Promise<{ data: VoteData[]; totalProposals: number }> {
   const response = await fetch("/api/get-voting-history", {
     method: "POST",
     headers: {
@@ -35,9 +35,10 @@ export async function fetchVotingHistory(
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const { data } = await response.json();
-  return data;
+  const { data, totalProposals } = await response.json();
+  return { data, totalProposals };
 }
+
 export async function fetchUpdatedAt(): Promise<string> {
   const response = await fetch("/api/get-updated-at");
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
