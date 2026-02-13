@@ -182,7 +182,7 @@ function DelegatorsTable({
               key={index}
               className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
             >
-              <td>
+              <td className="text-left">
                 <AddressCell delegateAddress={row.delegator} withLink={true} />
               </td>
 
