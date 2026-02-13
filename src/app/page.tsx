@@ -18,6 +18,7 @@ import {
   fetchDelegateRank,
   fetchTopDelegates,
   fetchUpdatedAt,
+  fetchVotingHistory,
 } from "./lib/client-api";
 import { ShortenAddress, formatToken, getRelativeTime } from "./lib/helpers";
 import publicClient from "./lib/publicClient";
@@ -658,6 +659,7 @@ function DelegateCard({
   const [loading, setLoading] = useState(false);
   const [rank, setRank] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [voteStats, setVoteStats] = useState<VoteData | null>(null);
 
   useEffect(() => {
     setX("");
@@ -667,6 +669,17 @@ function DelegateCard({
     setEnsName("");
     setRank("");
     setAvatarUrl(null);
+    setVoteStats(null);
+
+    const fetchVoteStats = async () => {
+      if (!delegateAddress) return;
+      try {
+        const data = await fetchVotingHistory([delegateAddress]);
+        if (data.length > 0) setVoteStats(data[0]);
+      } catch (e) {
+        console.error("Error fetching vote stats:", e);
+      }
+    };
 
     const fetchEnsData = async () => {
       setLoading(true);
@@ -706,10 +719,14 @@ function DelegateCard({
 
     fetchRank();
     fetchEnsData();
+    fetchVoteStats();
   }, [delegateAddress]);
 
+  const totalVotes = voteStats ? voteStats.votesFor + voteStats.votesAgainst + voteStats.votesAbstain : 0;
+
   return (
-    <div className="bg-zinc-800 rounded p-6 flex  justify-between flex-wrap md:flex-nowrap gap-5">
+    <div className="bg-zinc-800 rounded overflow-hidden">
+    <div className="p-6 flex  justify-between flex-wrap md:flex-nowrap gap-5">
       <div className="flex relative gap-4 w-fit ">
         <RankBadge rank={Number(rank)} />
 
@@ -878,6 +895,41 @@ function DelegateCard({
           Delegations
         </div>
       </div>
+    </div>
+    {/* Voting Stats Bar */}
+    {voteStats && totalVotes > 0 && (
+      <div className="border-t border-zinc-700 px-6 py-3 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+        <span className="text-zinc-400 text-sm whitespace-nowrap">
+          Voted <span className="text-zinc-100 font-mono">{voteStats.uniqueProposalCount}</span> proposals
+        </span>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="flex h-1.5 flex-1 rounded-full overflow-hidden bg-zinc-700">
+            <div
+              className="bg-emerald-500 transition-all duration-500"
+              style={{ width: `${(voteStats.votesFor / totalVotes) * 100}%` }}
+            />
+            <div
+              className="bg-red-500 transition-all duration-500"
+              style={{ width: `${(voteStats.votesAgainst / totalVotes) * 100}%` }}
+            />
+            <div
+              className="bg-zinc-500 transition-all duration-500"
+              style={{ width: `${(voteStats.votesAbstain / totalVotes) * 100}%` }}
+            />
+          </div>
+          <div className="flex gap-3 text-xs whitespace-nowrap">
+            <span className="text-emerald-500 font-mono">{voteStats.votesFor} <span className="text-zinc-500">For</span></span>
+            <span className="text-red-500 font-mono">{voteStats.votesAgainst} <span className="text-zinc-500">Against</span></span>
+            <span className="text-zinc-400 font-mono">{voteStats.votesAbstain} <span className="text-zinc-500">Abstain</span></span>
+          </div>
+        </div>
+      </div>
+    )}
+    {voteStats && totalVotes === 0 && (
+      <div className="border-t border-zinc-700 px-6 py-3">
+        <span className="text-zinc-500 text-sm">No on-chain votes</span>
+      </div>
+    )}
     </div>
   );
 }
