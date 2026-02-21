@@ -202,7 +202,7 @@ export default function RecentActivity({
 
   // Desktop mode (full) - with scrolling, keep existing 3-line format
   const activityList = (
-    <ul className="flex flex-col gap-2 max-h-[600px] overflow-y-auto">
+    <ul className="flex flex-col gap-2 max-h-[600px] overflow-y-auto scrollbar-hidden">
       {loading ? (
         [...Array(15)].map((_, i) => (
           <li key={i} className="flex flex-col text-sm">
