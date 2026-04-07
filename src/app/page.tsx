@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import Papa from "papaparse";
-import { Suspense, useEffect, useRef, useState } from "react";
-import { isAddress } from "viem";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Address, isAddress } from "viem";
 import { normalize } from "viem/ens";
 
 import AddressCell, { ProposerStats } from "./components/AddressCell";
@@ -418,38 +418,51 @@ function DelegatesTable({
     setCurrentPage(1);
   };
 
-  const handleExportCSV = () => {
-    // Prepare the data for CSV export
-    const csvData = enrichedDelegates.map((row) => ({
-      Rank: row.rank,
-      Delegate: row.delegate_address,
-      "Voting Power": Math.round(Number(row.voting_power) / 1e18), // Round to whole number
-      "30 Day Change": Math.round(
-        Number(row.voting_power - row.voting_power_30d_ago) / 1e18
-      ),
-      Delegations: row.non_zero_delegations,
-      "On-chain Votes": row.on_chain_votes || 0,
-    }));
+  const [exporting, setExporting] = useState(false);
 
-    // Generate CSV content using unparse
-    const csv = Papa.unparse(csvData);
+  const handleExportCSV = useCallback(async () => {
+    setExporting(true);
+    try {
+      // Batch resolve ENS names
+      const names = await Promise.all(
+        enrichedDelegates.map(async (row) => {
+          try {
+            return await publicClient.getEnsName({
+              address: row.delegate_address as Address,
+            });
+          } catch {
+            return null;
+          }
+        })
+      );
 
-    // Create and trigger download
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
+      const csvData = enrichedDelegates.map((row, i) => ({
+        Rank: row.rank,
+        Name: names[i] || "",
+        Delegate: row.delegate_address,
+        "Voting Power": Math.round(Number(row.voting_power) / 1e18),
+        "30 Day Change": Math.round(
+          Number(row.voting_power - row.voting_power_30d_ago) / 1e18
+        ),
+        Delegations: row.non_zero_delegations,
+        "On-chain Votes": row.on_chain_votes || 0,
+      }));
 
-    // Set filename with current date
-    const date = new Date().toISOString().split("T")[0];
-    link.setAttribute("href", url);
-    link.setAttribute("download", `ens-delegates-${date}.csv`);
-
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+      const csv = Papa.unparse(csvData);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      const date = new Date().toISOString().split("T")[0];
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ens-delegates-${date}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  }, [enrichedDelegates]);
 
   return (
     <div className="bg-zinc-800 p-4 rounded-lg">
@@ -494,9 +507,10 @@ function DelegatesTable({
           </div>
           <button
             onClick={handleExportCSV}
-            className="px-3 py-1 hidden md:inline bg-zinc-700 hover:bg-zinc-600 transition-colors duration-300 rounded text-zinc-100 text-sm"
+            disabled={exporting}
+            className="px-3 py-1 hidden md:inline bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-wait transition-colors duration-300 rounded text-zinc-100 text-sm"
           >
-            Export CSV
+            {exporting ? "Resolving names..." : "Export CSV"}
           </button>
         </div>
       </div>
