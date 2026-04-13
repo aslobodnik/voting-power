@@ -21,7 +21,8 @@ export async function fetchTopDelegates(): Promise<Delegate[]> {
 }
 
 export async function fetchVotingHistory(
-  addresses: string[]
+  addresses: string[],
+  signal?: AbortSignal
 ): Promise<{ data: VoteData[]; totalProposals: number }> {
   const response = await fetch("/api/get-voting-history", {
     method: "POST",
@@ -29,6 +30,7 @@ export async function fetchVotingHistory(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ addresses }),
+    signal,
   });
 
   if (!response.ok) {
@@ -54,10 +56,12 @@ export async function fetchVotableSupply(): Promise<number> {
 }
 
 export async function fetchDelegateRank(
-  delegateAddress: string
+  delegateAddress: string,
+  signal?: AbortSignal
 ): Promise<string> {
   const response = await fetch(
-    `/api/get-delegate-rank?delegate=${encodeURIComponent(delegateAddress)}`
+    `/api/get-delegate-rank?delegate=${encodeURIComponent(delegateAddress)}`,
+    { signal }
   );
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const { data } = await response.json();

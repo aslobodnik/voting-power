@@ -10,10 +10,11 @@ import {
 import useDelegatePowerHistory from "../hooks/useDelegatePowerHistory";
 
 function DelegatePowerChart({ delegateAddress }: { delegateAddress: string }) {
-  const { data, error } = useDelegatePowerHistory(delegateAddress);
+  const { data, error, isLoading } = useDelegatePowerHistory(delegateAddress);
 
-  if (error) return <div>Error: {error}</div>;
-  if (data.length === 0) return <div></div>;
+  if (error) return <div className="h-[120px] flex items-center justify-center text-zinc-500 text-sm">{error}</div>;
+  if (isLoading) return <div className="h-[120px] flex items-center justify-center"><div className="h-4 w-32 bg-zinc-700 rounded animate-pulse" /></div>;
+  if (data.length === 0) return <div className="h-[120px]"></div>;
 
   const formatXAxis = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString("en-US", {

@@ -33,7 +33,6 @@ function HoldersTable({}: {}) {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      console.log("loading....");
       setError(null);
       const url = "/api/get-top-holders";
 
@@ -49,18 +48,19 @@ function HoldersTable({}: {}) {
         setError(`There was a problem fetching the data: ${errorMessage}`);
       } finally {
         setIsLoading(false);
-        console.log("loading complete");
       }
     };
 
     fetchData();
   }, []);
 
-  const calculatePrecisePercentage = (balance: bigint) => {
-    const balanceBigInt = BigInt(balance);
-    const percentage = balanceBigInt / 10n ** 20n;
-    return (Number(percentage) / 10000).toFixed(2);
-  };
+  if (error) {
+    return (
+      <div className="bg-zinc-800 p-4 rounded-lg">
+        <div className="text-center py-12 text-zinc-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-zinc-800 p-4 rounded-lg">

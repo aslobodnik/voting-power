@@ -6,6 +6,7 @@ function useDelegators(delegateAddress: string, hideZeroBalances: boolean) {
   const [votingPower, setVotingPower] = useState<bigint>(0n);
   const [delegations, setDelegations] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDelegatorsData = async () => {
@@ -13,10 +14,12 @@ function useDelegators(delegateAddress: string, hideZeroBalances: boolean) {
         setDelegators([]);
         setVotingPower(0n);
         setDelegations(0);
+        setError(null);
         return;
       }
 
       setIsLoading(true);
+      setError(null);
       try {
         const data = await fetchDelegators(delegateAddress);
         const totalTokens = data.reduce(
@@ -30,8 +33,12 @@ function useDelegators(delegateAddress: string, hideZeroBalances: boolean) {
         setVotingPower(totalTokens);
         setDelegators(filteredData);
         setDelegations(filteredData.length);
-      } catch (error) {
-        console.error("Error fetching delegators:", error);
+      } catch (e) {
+        console.error("Error fetching delegators:", e);
+        setDelegators([]);
+        setVotingPower(0n);
+        setDelegations(0);
+        setError(e instanceof Error ? e.message : "Failed to fetch delegators");
       } finally {
         setIsLoading(false);
       }
@@ -40,6 +47,6 @@ function useDelegators(delegateAddress: string, hideZeroBalances: boolean) {
     fetchDelegatorsData();
   }, [delegateAddress, hideZeroBalances]);
 
-  return { delegators, votingPower, delegations, isLoading };
+  return { delegators, votingPower, delegations, isLoading, error };
 }
 export default useDelegators;

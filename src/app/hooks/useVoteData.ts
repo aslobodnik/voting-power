@@ -9,7 +9,13 @@ function useVoteData(delegates: Delegate[]) {
 
   useEffect(() => {
     const fetchVotes = async () => {
-      if (delegates.length === 0) return;
+      if (delegates.length === 0) {
+        setVoteData([]);
+        setTotalProposals(0);
+        setError(null);
+        setIsLoading(false);
+        return;
+      }
 
       setIsLoading(true);
       setError(null);

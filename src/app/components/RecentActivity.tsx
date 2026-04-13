@@ -41,12 +41,20 @@ export default function RecentActivity({
   const rowsPerPage = 10;
 
   useEffect(() => {
-    fetch("/api/get-recent-activity")
-      .then((res) => res.json())
-      .then((data) => {
-        setActivity(data.data || []);
+    const fetchActivity = async () => {
+      try {
+        const response = await fetch("/api/get-recent-activity");
+        if (response.ok) {
+          const data = await response.json();
+          setActivity(data.data || []);
+        }
+      } catch (e) {
+        console.error("Error fetching recent activity:", e);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchActivity();
   }, []);
 
   const click = (addr: string) =>

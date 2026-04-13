@@ -486,6 +486,10 @@ function DelegatesTable({
         <hr className="border-t border-zinc-700 w-full ml-2" />
       </div>
       <div className={showActivity ? "hidden md:block" : ""}>
+        {error && data.length === 0 ? (
+          <div className="text-center py-12 text-zinc-500">{error}</div>
+        ) : (
+        <>
         <table className="w-full">
             <thead>
               <tr className="text-left text-zinc-400">
@@ -602,6 +606,8 @@ function DelegatesTable({
             Votable: {formatToken(BigInt(votableSupply))}
           </div>
         </div>
+        </>
+        )}
       </div>
       {showActivity && (
         <div className="md:hidden">
@@ -634,20 +640,29 @@ function DelegateCard({
   const [loading, setLoading] = useState(false);
   const [voteStats, setVoteStats] = useState<VoteData | null>(null);
   const [totalProposals, setTotalProposals] = useState(0);
+  const [voteLoading, setVoteLoading] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     setProfile({ ensName: "", x: "", telegram: "", github: "", email: "", avatarUrl: null, rank: "" });
     setVoteStats(null);
     setTotalProposals(0);
+    setVoteLoading(false);
 
     const fetchVoteStats = async () => {
       if (!delegateAddress) return;
+      setVoteLoading(true);
       try {
-        const { data, totalProposals: total } = await fetchVotingHistory([delegateAddress]);
+        const { data, totalProposals: total } = await fetchVotingHistory([delegateAddress], signal);
         if (data.length > 0) setVoteStats(data[0]);
         setTotalProposals(total);
       } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
         console.error("Error fetching vote stats:", e);
+      } finally {
+        setVoteLoading(false);
       }
     };
 
@@ -656,7 +671,8 @@ function DelegateCard({
       if (delegateAddress) {
         try {
           const response = await fetch(
-            `https://ens-api.slobo.xyz/address/${delegateAddress}`
+            `https://ens-api.slobo.xyz/address/${delegateAddress}`,
+            { signal }
           );
           if (response.ok) {
             const data = await response.json();
@@ -673,6 +689,7 @@ function DelegateCard({
             }
           }
         } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") return;
           console.error("Error fetching ENS data:", error);
         }
       }
@@ -682,17 +699,19 @@ function DelegateCard({
     const fetchRank = async () => {
       if (!delegateAddress) return;
       try {
-        const data = await fetchDelegateRank(delegateAddress);
+        const data = await fetchDelegateRank(delegateAddress, signal);
         setProfile(prev => ({ ...prev, rank: data }));
       } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        console.error(`There was a problem fetching rank: ${errorMessage}`);
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        console.error("Error fetching rank:", e);
       }
     };
 
     fetchRank();
     fetchEnsData();
     fetchVoteStats();
+
+    return () => controller.abort();
   }, [delegateAddress]);
 
   const totalVotes = voteStats ? voteStats.votesFor + voteStats.votesAgainst + voteStats.votesAbstain : 0;
@@ -833,38 +852,41 @@ function DelegateCard({
       </div>
     </div>
     {/* Voting Stats Bar */}
-    {voteStats && totalVotes > 0 && totalProposals > 0 && (
-      <div className="border-t border-zinc-700 px-6 py-3 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-        <span className="text-zinc-400 text-sm whitespace-nowrap">
-          Voted <span className="text-zinc-100 font-mono">{voteStats.uniqueProposalCount}</span>/<span className="font-mono">{totalProposals}</span>
-          <span className="text-zinc-500 ml-1">({participationPct}%)</span>
-        </span>
-        <div className="flex items-center gap-3 flex-1">
-          <div className="flex h-1.5 flex-1 rounded-full overflow-hidden bg-zinc-700">
-            <div
-              className="bg-emerald-500 transition-all duration-500"
-              style={{ width: `${(voteStats.votesFor / totalVotes) * 100}%` }}
-            />
-            <div
-              className="bg-red-500 transition-all duration-500"
-              style={{ width: `${(voteStats.votesAgainst / totalVotes) * 100}%` }}
-            />
-            <div
-              className="bg-zinc-500 transition-all duration-500"
-              style={{ width: `${(voteStats.votesAbstain / totalVotes) * 100}%` }}
-            />
-          </div>
-          <div className="flex gap-3 text-xs whitespace-nowrap">
-            <span className="text-emerald-500 font-mono">{voteStats.votesFor} <span className="text-zinc-500">For</span></span>
-            <span className="text-red-500 font-mono">{voteStats.votesAgainst} <span className="text-zinc-500">Against</span></span>
-            <span className="text-zinc-400 font-mono">{voteStats.votesAbstain} <span className="text-zinc-500">Abstain</span></span>
-          </div>
-        </div>
-      </div>
-    )}
-    {voteStats && totalVotes === 0 && (
+    {delegateAddress && (
       <div className="border-t border-zinc-700 px-6 py-3">
-        <span className="text-zinc-500 text-sm">No on-chain votes</span>
+        {voteLoading ? (
+          <div className="h-5 w-48 bg-zinc-700 rounded animate-pulse" />
+        ) : voteStats && totalVotes > 0 && totalProposals > 0 ? (
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+            <span className="text-zinc-400 text-sm whitespace-nowrap">
+              Voted <span className="text-zinc-100 font-mono">{voteStats.uniqueProposalCount}</span>/<span className="font-mono">{totalProposals}</span>
+              <span className="text-zinc-500 ml-1">({participationPct}%)</span>
+            </span>
+            <div className="flex items-center gap-3 flex-1">
+              <div className="flex h-1.5 flex-1 rounded-full overflow-hidden bg-zinc-700">
+                <div
+                  className="bg-emerald-500 transition-all duration-500"
+                  style={{ width: `${(voteStats.votesFor / totalVotes) * 100}%` }}
+                />
+                <div
+                  className="bg-red-500 transition-all duration-500"
+                  style={{ width: `${(voteStats.votesAgainst / totalVotes) * 100}%` }}
+                />
+                <div
+                  className="bg-zinc-500 transition-all duration-500"
+                  style={{ width: `${(voteStats.votesAbstain / totalVotes) * 100}%` }}
+                />
+              </div>
+              <div className="flex gap-3 text-xs whitespace-nowrap">
+                <span className="text-emerald-500 font-mono">{voteStats.votesFor} <span className="text-zinc-500">For</span></span>
+                <span className="text-red-500 font-mono">{voteStats.votesAgainst} <span className="text-zinc-500">Against</span></span>
+                <span className="text-zinc-400 font-mono">{voteStats.votesAbstain} <span className="text-zinc-500">Abstain</span></span>
+              </div>
+            </div>
+          </div>
+        ) : voteStats && totalVotes === 0 ? (
+          <span className="text-zinc-500 text-sm">No on-chain votes</span>
+        ) : null}
       </div>
     )}
     </div>
@@ -883,6 +905,10 @@ function Avatar({
   const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
+    setImgSrc(null);
+    setLoadError(false);
+    setIsFetching(false);
+
     if (avatarUrl && !loading) {
       const fetchAvatar = async () => {
         setIsFetching(true);
