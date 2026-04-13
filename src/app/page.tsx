@@ -112,16 +112,10 @@ export default function Home() {
               searchInputRef={searchInputRef}
             />
           </Suspense>
-          {searchStatus === "not-found" && (
-            <p className="text-sm text-zinc-500 mt-2">
-              No address found for &ldquo;{searchInput}&rdquo;
-            </p>
-          )}
-          {searchStatus === "error" && (
-            <p className="text-sm text-red-400 mt-2">
-              Could not resolve &mdash; try again
-            </p>
-          )}
+          <p className="text-xs text-zinc-500 h-4">
+            {searchStatus === "not-found" && "No address found"}
+            {searchStatus === "error" && "Resolution failed"}
+          </p>
         </div>
       </div>
       <hr className="border-t border-zinc-750 " />
