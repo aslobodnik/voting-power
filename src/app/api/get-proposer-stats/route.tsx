@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
           p.end_block,
           MAX(CASE WHEN pl.event_type = 'executed' THEN 1 ELSE 0 END) as is_executed,
           MAX(CASE WHEN pl.event_type = 'queued' THEN 1 ELSE 0 END) as is_queued,
-          MAX(CASE WHEN pl.event_type = 'canceled' THEN 1 ELSE 0 END) as is_canceled
+          MAX(CASE WHEN pl.event_type = 'canceled' THEN 1 ELSE 0 END) as is_canceled,
+          MAX(CASE WHEN pl.event_type = 'queued' THEN pl.eta END) as queued_eta
         FROM proposals p
         LEFT JOIN proposal_lifecycle pl ON p.proposal_id = pl.proposal_id
         WHERE LOWER(p.proposer) = ANY($1)
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
         COUNT(CASE WHEN is_executed = 1 THEN 1 END) as proposals_passed,
         COUNT(CASE WHEN is_executed = 0 AND is_canceled = 0 AND end_block < $2 THEN 1 END) as proposals_defeated,
         ARRAY_AGG(CASE WHEN is_executed = 0 AND is_canceled = 0 AND is_queued = 0 AND end_block >= $2 THEN proposal_id::text END) FILTER (WHERE is_executed = 0 AND is_canceled = 0 AND is_queued = 0 AND end_block >= $2) as live_proposal_ids,
-        ARRAY_AGG(CASE WHEN is_queued = 1 AND is_executed = 0 THEN proposal_id::text END) FILTER (WHERE is_queued = 1 AND is_executed = 0) as queued_proposal_ids
+        ARRAY_AGG(CASE WHEN is_queued = 1 AND is_executed = 0 AND (queued_eta + 1209600) > EXTRACT(EPOCH FROM NOW()) THEN proposal_id::text END) FILTER (WHERE is_queued = 1 AND is_executed = 0 AND (queued_eta + 1209600) > EXTRACT(EPOCH FROM NOW())) as queued_proposal_ids
       FROM proposal_status
       GROUP BY LOWER(proposer)`,
       [addresses, currentBlock]

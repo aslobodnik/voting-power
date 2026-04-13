@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Papa from "papaparse";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Address, isAddress } from "viem";
 import { normalize } from "viem/ens";
 
@@ -18,6 +18,7 @@ import {
   fetchDelegateRank,
   fetchTopDelegates,
   fetchUpdatedAt,
+  fetchVotableSupply,
   fetchVotingHistory,
 } from "./lib/client-api";
 import { ShortenAddress, formatToken, getRelativeTime } from "./lib/helpers";
@@ -26,6 +27,9 @@ import publicClient from "./lib/publicClient";
 export default function Home() {
   const [searchInput, setSearchInput] = useState("");
   const [resolvedAddress, setResolvedAddress] = useState("");
+  const [searchStatus, setSearchStatus] = useState<
+    "idle" | "resolving" | "resolved" | "not-found" | "error"
+  >("idle");
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,20 +38,33 @@ export default function Home() {
     const handler = setTimeout(async () => {
       if (!searchInput) {
         setResolvedAddress("");
+        setSearchStatus("idle");
         return;
       }
+
+      setResolvedAddress("");
+      setSearchStatus("resolving");
+
       if (isAddress(searchInput)) {
         setResolvedAddress(searchInput);
+        setSearchStatus("resolved");
       } else if (searchInput.includes(".")) {
         try {
           const normalizedName = normalize(searchInput);
           const ensAddress = await publicClient.getEnsAddress({
             name: normalizedName,
           });
-          if (ensAddress) setResolvedAddress(ensAddress);
+          if (ensAddress) {
+            setResolvedAddress(ensAddress);
+            setSearchStatus("resolved");
+          } else {
+            setSearchStatus("not-found");
+          }
         } catch (e) {
-          // Optionally handle error
+          setSearchStatus("error");
         }
+      } else {
+        setSearchStatus("idle");
       }
     }, 400);
     return () => clearTimeout(handler);
@@ -63,6 +80,7 @@ export default function Home() {
   const handleDelegateClick = (address: string) => {
     setResolvedAddress(address);
     setSearchInput(address);
+    setSearchStatus("resolved");
     if (searchInputRef.current) {
       searchInputRef.current.scrollIntoView({
         behavior: "smooth",
@@ -94,6 +112,16 @@ export default function Home() {
               searchInputRef={searchInputRef}
             />
           </Suspense>
+          {searchStatus === "not-found" && (
+            <p className="text-sm text-zinc-500 mt-2">
+              No address found for &ldquo;{searchInput}&rdquo;
+            </p>
+          )}
+          {searchStatus === "error" && (
+            <p className="text-sm text-red-400 mt-2">
+              Could not resolve &mdash; try again
+            </p>
+          )}
         </div>
       </div>
       <hr className="border-t border-zinc-750 " />
@@ -131,10 +159,6 @@ function DelegatorsTable({
   );
 
   const totalPages = Math.ceil(data.length / rowsPerPage);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
@@ -208,27 +232,17 @@ function DelegatorsTable({
               </td>
             </tr>
           ))}
-          {Array.from(
-            { length: Math.max(rowsPerPage - currentData.length, 0) },
-            (_, index) => (
-              <tr
-                key={`placeholder-${index}`}
-                className="border-b border-zinc-700"
-              >
-                <td className="py-3 text-left">&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td className="hidden md:table-cell">&nbsp;</td>
-              </tr>
-            )
-          )}
+          <PlaceholderRows
+            count={rowsPerPage - currentData.length}
+            columns={["", "", "", "hidden md:table-cell"]}
+          />
         </tbody>
       </table>
       <div className="mt-4 flex justify-between items-center text-zinc-400">
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={handlePageChange}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>
@@ -253,10 +267,6 @@ function DelegatesTable({
   const rowsPerPage = 10;
   const totalPages = Math.ceil(data.length / rowsPerPage);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
 
@@ -273,59 +283,26 @@ function DelegatesTable({
   }, [data]);
 
   useEffect(() => {
-    const fetchTopDelegatesData = async () => {
+    const fetchInitialData = async () => {
       setIsLoading(true);
       setError(null);
-
       try {
-        const data = await fetchTopDelegates();
-        setData(data);
+        const [delegates, updatedAtTimestamp, supply] = await Promise.all([
+          fetchTopDelegates(),
+          fetchUpdatedAt(),
+          fetchVotableSupply(),
+        ]);
+        setData(delegates);
+        setUpdatedAt(updatedAtTimestamp);
+        setVotableSupply(supply);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        setError(`There was a problem fetching top delegates: ${errorMessage}`);
+        setError(`There was a problem fetching delegate data: ${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchTopDelegatesData();
-  }, []);
-
-  useEffect(() => {
-    const fetchUpdatedAtTimestamp = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await fetchUpdatedAt();
-        setUpdatedAt(data);
-      } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        setError(`There was a problem fetching top delegates: ${errorMessage}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUpdatedAtTimestamp();
-  }, []);
-
-  useEffect(() => {
-    const fetchVotableSupply = async () => {
-      try {
-        const response = await fetch("/api/get-votable-supply");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.data && data.data.length > 0) {
-            setVotableSupply(Number(data.data[0].votable_supply));
-          }
-        }
-      } catch (e) {
-        console.error("Error fetching votable supply:", e);
-      }
-    };
-
-    fetchVotableSupply();
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
@@ -350,29 +327,25 @@ function DelegatesTable({
     fetchProposerStats();
   }, [data]);
 
-  const handleClick = (address: string) => {
-    if (onDelegateClick) {
-      onDelegateClick(address);
-    }
-  };
-
-  const enrichedDelegates = data.map((delegate) => {
-    const vote = voteData.find(
-      (v) => v.voter.toLowerCase() === delegate.delegate_address.toLowerCase()
+  const enrichedDelegates = useMemo(() => {
+    const voteMap = new Map(
+      voteData.map((v) => [v.voter.toLowerCase(), v])
     );
-
-    if (vote) {
-      return {
-        ...delegate,
-        latest_vote_timestamp: vote.latestTimestamp,
-        on_chain_votes: vote.uniqueProposalCount,
-        votes_for: vote.votesFor,
-        votes_against: vote.votesAgainst,
-        votes_abstain: vote.votesAbstain,
-      };
-    }
-    return delegate;
-  });
+    return data.map((delegate) => {
+      const vote = voteMap.get(delegate.delegate_address.toLowerCase());
+      if (vote) {
+        return {
+          ...delegate,
+          latest_vote_timestamp: vote.latestTimestamp,
+          on_chain_votes: vote.uniqueProposalCount,
+          votes_for: vote.votesFor,
+          votes_against: vote.votesAgainst,
+          votes_abstain: vote.votesAbstain,
+        };
+      }
+      return delegate;
+    });
+  }, [data, voteData]);
 
   const sortedDelegates = sortField
     ? [...enrichedDelegates].sort((a, b) => {
@@ -571,7 +544,7 @@ function DelegatesTable({
               <td className="text-left w-72">
                 <AddressCell
                   delegateAddress={row.delegate_address}
-                  onClick={() => handleClick(row.delegate_address)}
+                  onClick={() => onDelegateClick?.(row.delegate_address)}
                   proposerStats={proposerStats.find(
                     (p) => p.proposer.toLowerCase() === row.delegate_address.toLowerCase()
                   )}
@@ -619,28 +592,17 @@ function DelegatesTable({
               </td>
             </tr>
           ))}
-          {Array.from(
-            { length: Math.max(rowsPerPage - currentData.length, 0) },
-            (_, index) => (
-              <tr
-                key={`placeholder-${index}`}
-                className="border-b border-zinc-700"
-              >
-                <td className="py-3 text-left">&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td className="hidden md:table-cell">&nbsp;</td>
-                <td className="hidden lg:table-cell">&nbsp;</td>
-              </tr>
-            )
-          )}
+          <PlaceholderRows
+            count={rowsPerPage - currentData.length}
+            columns={["", "", "", "hidden md:table-cell", "hidden lg:table-cell"]}
+          />
         </tbody>
         </table>
         <div className="mt-4 flex justify-between items-center text-zinc-400">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={handlePageChange}
+            onPageChange={setCurrentPage}
           />
           <div className="text-sm font-mono text-zinc-400">
             Votable: {formatToken(BigInt(votableSupply))}
@@ -665,25 +627,22 @@ function DelegateCard({
   votingPower: bigint;
   delegations: number;
 }) {
-  const [ensName, setEnsName] = useState("");
-  const [telegram, setTelegram] = useState("");
-  const [github, setGithub] = useState("");
-  const [email, setEmail] = useState("");
-  const [x, setX] = useState("");
+  const [profile, setProfile] = useState({
+    ensName: "",
+    x: "",
+    telegram: "",
+    github: "",
+    email: "",
+    avatarUrl: null as string | null,
+    rank: "",
+  });
+  const { ensName, x, telegram, github, email, avatarUrl, rank } = profile;
   const [loading, setLoading] = useState(false);
-  const [rank, setRank] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [voteStats, setVoteStats] = useState<VoteData | null>(null);
   const [totalProposals, setTotalProposals] = useState(0);
 
   useEffect(() => {
-    setX("");
-    setTelegram("");
-    setEmail("");
-    setGithub("");
-    setEnsName("");
-    setRank("");
-    setAvatarUrl(null);
+    setProfile({ ensName: "", x: "", telegram: "", github: "", email: "", avatarUrl: null, rank: "" });
     setVoteStats(null);
     setTotalProposals(0);
 
@@ -708,12 +667,15 @@ function DelegateCard({
           if (response.ok) {
             const data = await response.json();
             if (data.name) {
-              setEnsName(data.name);
-              setX(data.texts?.["com.twitter"] || "");
-              setTelegram(data.texts?.["org.telegram"] || "");
-              setEmail(data.texts?.["email"] || "");
-              setGithub(data.texts?.["com.github"] || "");
-              setAvatarUrl(data.avatar?.lg || null);
+              setProfile(prev => ({
+                ...prev,
+                ensName: data.name,
+                x: data.texts?.["com.twitter"] || "",
+                telegram: data.texts?.["org.telegram"] || "",
+                email: data.texts?.["email"] || "",
+                github: data.texts?.["com.github"] || "",
+                avatarUrl: data.avatar?.lg || null,
+              }));
             }
           }
         } catch (error) {
@@ -727,7 +689,7 @@ function DelegateCard({
       if (!delegateAddress) return;
       try {
         const data = await fetchDelegateRank(delegateAddress);
-        setRank(data);
+        setProfile(prev => ({ ...prev, rank: data }));
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         console.error(`There was a problem fetching rank: ${errorMessage}`);
@@ -807,63 +769,23 @@ function DelegateCard({
           {/* Social Links */}
           {!loading && (
             <div className="flex gap-2">
-              {x && (
-                <Link
-                  href={`https://x.com/${x}`}
-                  target="_blank"
-                  className="duration-300 hover:bg-zinc-700  transition-all  border border-zinc-700 rounded p-1"
-                >
-                  {" "}
-                  <Image
-                    src="/icon_x.svg"
-                    alt="X Icon"
-                    width={16}
-                    height={16}
-                  />
-                </Link>
-              )}
-              {github && (
-                <Link
-                  href={`https://github.com/${github}`}
-                  target="_blank"
-                  className="duration-300 hover:bg-zinc-700  transition-all  border border-zinc-700 rounded p-1"
-                >
-                  <Image
-                    src="/icon_github.svg"
-                    alt="github Icon"
-                    width={16}
-                    height={16}
-                  />
-                </Link>
-              )}
-              {telegram && (
-                <Link
-                  href={`https://t.me/${telegram}`}
-                  target="_blank"
-                  className="duration-300 hover:bg-zinc-700  transition-all  border border-zinc-700 rounded p-1"
-                >
-                  <Image
-                    src="/icon_telegram.svg"
-                    alt="Telegram Icon"
-                    width={16}
-                    height={16}
-                  />
-                </Link>
-              )}
-              {email && (
-                <Link
-                  href={`mailto:${email}`}
-                  target="_blank"
-                  className="duration-300 hover:bg-zinc-700  transition-all  border border-zinc-700 rounded p-1"
-                >
-                  <Image
-                    src="/icon_email.svg"
-                    alt="Email Icon"
-                    width={16}
-                    height={16}
-                  />
-                </Link>
-              )}
+              {[
+                { value: x, href: `https://x.com/${x}`, icon: "/icon_x.svg", alt: "X" },
+                { value: github, href: `https://github.com/${github}`, icon: "/icon_github.svg", alt: "GitHub" },
+                { value: telegram, href: `https://t.me/${telegram}`, icon: "/icon_telegram.svg", alt: "Telegram" },
+                { value: email, href: `mailto:${email}`, icon: "/icon_email.svg", alt: "Email" },
+              ]
+                .filter((link) => link.value)
+                .map((link) => (
+                  <Link
+                    key={link.alt}
+                    href={link.href}
+                    target="_blank"
+                    className="duration-300 hover:bg-zinc-700 transition-all border border-zinc-700 rounded p-1"
+                  >
+                    <Image src={link.icon} alt={`${link.alt} Icon`} width={16} height={16} />
+                  </Link>
+                ))}
             </div>
           )}
         </div>
@@ -1065,6 +987,32 @@ function SearchInput({
         spellCheck="false"
       />
     </div>
+  );
+}
+
+function PlaceholderRows({
+  count,
+  columns,
+}: {
+  count: number;
+  columns: string[];
+}) {
+  if (count <= 0) return null;
+  return (
+    <>
+      {Array.from({ length: count }, (_, i) => (
+        <tr key={`placeholder-${i}`} className="border-b border-zinc-700">
+          {columns.map((className, j) => (
+            <td
+              key={j}
+              className={`${j === 0 ? "py-3 text-left" : ""} ${className}`.trim()}
+            >
+              &nbsp;
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
   );
 }
 

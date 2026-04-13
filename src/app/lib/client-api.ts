@@ -46,6 +46,13 @@ export async function fetchUpdatedAt(): Promise<string> {
   return data[0].block_timestamp;
 }
 
+export async function fetchVotableSupply(): Promise<number> {
+  const response = await fetch("/api/get-votable-supply");
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const { data } = await response.json();
+  return data.length > 0 ? Number(data[0].votable_supply) : 0;
+}
+
 export async function fetchDelegateRank(
   delegateAddress: string
 ): Promise<string> {
