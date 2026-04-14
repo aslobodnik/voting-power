@@ -1,0 +1,111 @@
+"use client";
+import { useEffect, useState } from "react";
+import Pagination from "../components/Pagination";
+import { formatToken } from "../lib/helpers";
+import AddressCell from "../components/AddressCell";
+import ChangeIndicator from "../components/ChangeIndicator";
+
+export function HoldersTable({
+  initialData,
+  error,
+}: {
+  initialData: Holder[];
+  error?: string | null;
+}) {
+  const [data] = useState<Holder[]>(initialData);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const rowsPerPage = 20;
+  const totalPages = Math.ceil(data.length / rowsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = data.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
+
+  if (error) {
+    return (
+      <div className="bg-zinc-800 p-4 rounded-lg">
+        <div className="text-center py-12 text-zinc-500">{error}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-zinc-800 p-4 rounded-lg">
+      <div className="flex justify-between items-center mb-4 mt-4">
+        <h2 className="text-zinc-100 text-right text-2xl font-bold">
+          Top 1,000 $ENS Holders
+        </h2>
+      </div>
+      <div className="flex items-center mb-4">
+        <div className="w-[7px] h-[7px] bg-zinc-700 "></div>
+        <hr className="border-t border-zinc-700 w-full ml-2" />
+      </div>
+      <table className="w-full">
+        <thead>
+          <tr className="text-left text-zinc-400">
+            <th className="py-2 w-24 text-center">Rank</th>
+            <th className="py-2 text-left">Holder</th>
+            <th className="py-2 text-right ">Balance</th>
+
+            <th className="py-2 text-right md:whitespace-nowrap">
+              <span className="hidden md:inline">30 Day </span>Δ
+            </th>
+          </tr>
+        </thead>
+        <tbody className="font-mono">
+          {currentData.map((row, index) => (
+            <tr
+              key={index}
+              className="hover:bg-zinc-700 border-b text-zinc-100 text-right border-zinc-700"
+            >
+              <td className="py-3 text-center">{row.rank}</td>
+              <td className="text-left w-72">
+                <AddressCell delegateAddress={row.address} withLink={true} />
+              </td>
+              <td className="w-48">{formatToken(row.balance)}</td>
+
+              <td className="w-28">
+                {" "}
+                <ChangeIndicator
+                  change={row.balance_30d_ago - row.balance}
+                  threshold={10_000}
+                  isNew={row.balance_30d_ago == 0n}
+                  location="left"
+                />
+              </td>
+            </tr>
+          ))}
+          {Array.from(
+            { length: Math.max(rowsPerPage - currentData.length, 0) },
+            (_, index) => (
+              <tr
+                key={`placeholder-${index}`}
+                className="border-b border-zinc-700"
+              >
+                <td className="py-3 text-left">&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+              </tr>
+            )
+          )}
+        </tbody>
+      </table>
+      <div className="mt-4 flex justify-between items-center text-zinc-400">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
+    </div>
+  );
+}
