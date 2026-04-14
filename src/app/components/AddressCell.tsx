@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Address } from "viem";
 
+import { getEnsNameCached } from "../lib/ensCache";
 import { ShortenAddress } from "../lib/helpers";
-import publicClient from "../lib/publicClient";
 
 export interface ProposerStats {
   proposer: string;
@@ -32,9 +31,7 @@ function AddressCell({
   useEffect(() => {
     async function fetchEnsName() {
       try {
-        const ens = await publicClient.getEnsName({
-          address: delegateAddress as Address,
-        });
+        const ens = await getEnsNameCached(delegateAddress);
         setEnsName(ens);
       } catch (error) {
         console.error(`Error fetching ENS for ${delegateAddress}:`, error);

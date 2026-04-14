@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
         delegate_address
       FROM recent_activity
       WHERE amount >= $1
-      ORDER BY block_number DESC, log_index DESC;
+      ORDER BY block_number DESC, log_index DESC
+      LIMIT 200;
     `;
     const result = await pool.query(q, [threshold]);
 
