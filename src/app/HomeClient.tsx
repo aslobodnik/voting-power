@@ -118,7 +118,7 @@ export default function HomeClient({
       {/* Search Delegates Section */}
       <div id="search-section" className="flex flex-col  gap-5 justify-between ">
         <div className="flex flex-col gap-5">
-          <h1 className="text-zinc-100 text-2xl">Search Delegates</h1>
+          <h1 className="text-zinc-100 text-2xl pl-2">Search Delegates</h1>
           <Suspense>
             <SearchInput
               searchInput={searchInput}
@@ -126,13 +126,12 @@ export default function HomeClient({
               searchInputRef={searchInputRef}
             />
           </Suspense>
-          <p className="text-xs text-zinc-500 h-4">
+          <p className="text-xs text-zinc-500 h-4 pl-2">
             {searchStatus === "not-found" && "No address found"}
             {searchStatus === "error" && "Resolution failed"}
           </p>
         </div>
       </div>
-      <hr className="border-t border-zinc-750 " />
       {/* Delegate Card */}
       <DelegateCard
         delegateAddress={resolvedAddress}
