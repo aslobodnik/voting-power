@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Papa from "papaparse";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Address, isAddress } from "viem";
+import { isAddress } from "viem";
 import { normalize } from "viem/ens";
 
 import AddressCell, { ProposerStats } from "./components/AddressCell";
@@ -21,6 +21,7 @@ import {
   fetchVotableSupply,
   fetchVotingHistory,
 } from "./lib/client-api";
+import { getEnsNameCached } from "./lib/ensCache";
 import { ShortenAddress, formatToken, getRelativeTime } from "./lib/helpers";
 import publicClient from "./lib/publicClient";
 
@@ -390,13 +391,11 @@ function DelegatesTable({
   const handleExportCSV = useCallback(async () => {
     setExporting(true);
     try {
-      // Batch resolve ENS names
+      // Batch resolve ENS names (reuses session cache populated by AddressCell)
       const names = await Promise.all(
         enrichedDelegates.map(async (row) => {
           try {
-            return await publicClient.getEnsName({
-              address: row.delegate_address as Address,
-            });
+            return await getEnsNameCached(row.delegate_address);
           } catch {
             return null;
           }
