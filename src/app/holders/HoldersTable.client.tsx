@@ -54,6 +54,7 @@ export function HoldersTable({
           <tr className="text-left text-zinc-400">
             <th className="py-2 w-24 text-center">Rank</th>
             <th className="py-2 text-left">Holder</th>
+            <th className="py-2 text-left hidden lg:table-cell">Delegated To</th>
             <th className="py-2 text-right ">Balance</th>
 
             <th className="py-2 text-right md:whitespace-nowrap">
@@ -70,6 +71,13 @@ export function HoldersTable({
               <td className="py-3 text-center">{row.rank}</td>
               <td className="text-left w-72">
                 <AddressCell delegateAddress={row.address} withLink={true} />
+              </td>
+              <td className="text-left w-72 hidden lg:table-cell">
+                {row.delegate ? (
+                  <AddressCell delegateAddress={row.delegate} withLink={true} />
+                ) : (
+                  <span className="text-zinc-500">Undelegated</span>
+                )}
               </td>
               <td className="w-48">{formatToken(row.balance)}</td>
 
@@ -92,6 +100,8 @@ export function HoldersTable({
                 className="border-b border-zinc-700"
               >
                 <td className="py-3 text-left">&nbsp;</td>
+                <td>&nbsp;</td>
+                <td className="hidden lg:table-cell">&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
               </tr>

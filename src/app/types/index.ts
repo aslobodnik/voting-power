@@ -22,6 +22,7 @@ type Delegator = {
 
 type Holder = {
   address: string;
+  delegate: string | null;
   balance: bigint;
   rank: number;
   balance_30d_ago: bigint;

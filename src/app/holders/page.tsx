@@ -10,7 +10,20 @@ export default async function Holders() {
   let errorMessage: string | null = null;
   try {
     const q = `
-      select * from top_1000_holders order by balance desc;
+      SELECT
+        h.address,
+        h.balance,
+        h.rank,
+        h.balance_30d_ago,
+        CASE
+          WHEN lower(cd.delegate) = '0x0000000000000000000000000000000000000000'
+            THEN NULL
+          ELSE cd.delegate
+        END AS delegate
+      FROM top_1000_holders h
+      LEFT JOIN current_delegations cd
+        ON lower(cd.delegator) = lower(h.address)
+      ORDER BY h.balance DESC;
     `;
     const result = await pool.query(q);
     rows = result.rows as Holder[];
